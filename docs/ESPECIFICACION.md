@@ -63,9 +63,9 @@ pero se reservan por separado.
 
 | Supuesto | Decisión |
 |----------|----------|
-| Zona horaria | Única y fija: `America/Argentina/Buenos_Aires` (UTC−3, sin horario de verano). Todas las horas ingresadas y guardadas son hora local del laboratorio. |
+| Zona horaria | Única y fija: hora de Argentina, implementada como desfase fijo **UTC−3** (`datetime.timezone(timedelta(hours=-3))`; Argentina no aplica horario de verano desde 2009). Todas las horas ingresadas y guardadas son hora local del laboratorio. Ver cambio v1.1. |
 | Formato de fecha | `YYYY-MM-DDTHH:MM` (ISO 8601, precisión de minutos). Cualquier otro formato se rechaza. Se usa `T` para no tener que escribir comillas en la consola. |
-| Fechas pasadas | No se puede **crear** una reserva cuyo inicio sea anterior a "ahora". Sí se puede **consultar** disponibilidad de intervalos pasados y **cancelar** reservas activas aunque ya hayan pasado (registro administrativo). |
+| Fechas pasadas | No se puede **crear** una reserva cuyo inicio sea anterior a "ahora" truncado al minuto (una reserva que empieza en el minuto actual se acepta). Sí se puede **consultar** disponibilidad de intervalos pasados y **cancelar** reservas activas aunque ya hayan pasado (registro administrativo). |
 | Duración y anticipación | Sin máximo de duración ni de anticipación. Una reserva puede abarcar varios días. |
 | Reloj | El "ahora" se obtiene de un reloj inyectable para que las pruebas sean deterministas. |
 | Solicitante | Texto libre ficticio (sin validar identidad, sin autenticación). |
@@ -98,3 +98,4 @@ se indique un procedimiento manual). Escenario base: ahora = `2026-11-01T08:00`.
 | Versión | Fecha | Cambio | Motivo |
 |---------|-------|--------|--------|
 | v1 | 2026-10-26 | Versión inicial, redactada en la sesión de preparación del agente. | Punto de partida para los episodios de delegación. |
+| v1.1 | 2026-11-02 | Zona horaria: de `ZoneInfo("America/Argentina/Buenos_Aires")` a desfase fijo UTC−3. Se aclara que "ahora" se trunca al minuto. | Comprobado en el episodio 1: en Windows `ZoneInfo(...)` lanza `ZoneInfoNotFoundError` sin el paquete `tzdata`. El desfase fijo da el mismo resultado para Argentina sin agregar dependencias. El truncado evita rechazar una reserva del minuto en curso por los segundos. |

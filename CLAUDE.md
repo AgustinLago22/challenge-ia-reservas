@@ -13,7 +13,7 @@ archivo contradice la especificación, gana la especificación y hay que avisarl
 ## Stack fijo (no cambiar sin pedido explícito)
 
 - Python 3.13, **solo biblioteca estándar** en la aplicación (`sqlite3`, `argparse`,
-  `json`, `datetime`, `zoneinfo`). Única dependencia de desarrollo: `pytest` (fijada
+  `json`, `datetime`). Única dependencia de desarrollo: `pytest` (fijada
   en `requirements-dev.txt`). No instalar paquetes nuevos sin aprobación.
 - Paquete `reservas/` en la raíz del repo, ejecutable con `python -m reservas`.
 - Pruebas en `tests/`, ejecutadas con `.venv/Scripts/python -m pytest -v`.
@@ -34,8 +34,10 @@ archivo contradice la especificación, gana la especificación y hay que avisarl
 ## Fechas y reloj
 
 - Formato único de entrada: `YYYY-MM-DDTHH:MM`, parseado con
-  `datetime.strptime(valor, "%Y-%m-%dT%H:%M")`. Zona horaria fija
-  `America/Argentina/Buenos_Aires`; se guardan como texto en ese mismo formato.
+  `datetime.strptime(valor, "%Y-%m-%dT%H:%M")`. Zona horaria fija UTC−3 con
+  `datetime.timezone(timedelta(hours=-3))`. **No usar `zoneinfo`**: en Windows falla
+  sin el paquete `tzdata` (comprobado, ver especificación v1.1). Se guardan como texto
+  en ese mismo formato.
 - El "ahora" se recibe mediante un **reloj inyectable** (callable que devuelve
   `datetime`). Las pruebas nunca dependen de la fecha real de la máquina.
 

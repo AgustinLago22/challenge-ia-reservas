@@ -1,0 +1,17 @@
+== M1: '<' por '<=' en se_superponen (rompe R8)
+   resumen: 8 failed, 72 passed in 1.35s
+    FAILED tests/test_reservas.py::test_ca03_limites_consecutivos_permitidos[11:00-12:00]
+    FAILED tests/test_reservas.py::test_ca03_limites_consecutivos_permitidos[09:00-10:00]
+    FAILED tests/test_reservas.py::test_ca03_encadenar_tres_turnos_consecutivos
+    FAILED tests/test_reservas.py::test_ca09_disponibilidad_usa_las_mismas_reglas
+    FAILED tests/test_reservas.py::test_ca10_cancelar_solo_libera_esa_reserva
+    FAILED tests/test_reservas.py::test_ca13_conflicto_no_deja_la_transaccion_abierta
+    FAILED tests/test_superposicion.py::test_se_superponen[11:00-12:00-False-consecutivo posterior]
+    FAILED tests/test_superposicion.py::test_se_superponen[09:00-10:00-False-consecutivo anterior]
+== M2: las CANCELADAS tambien bloquean (rompe R10)
+   resumen: 3 failed, 77 passed in 1.34s
+    FAILED tests/test_persistencia.py::test_ca12_reabrir_recupera_activas_y_canceladas
+    FAILED tests/test_reservas.py::test_ca01_ids_unicos_y_crecientes
+    FAILED tests/test_reservas.py::test_ca10_cancelar_conserva_datos_y_libera_horario
+
+# Ejecutado: 2026-11-02T13:13:49-03:00 | comando: .venv/Scripts/python scripts/verificar_mutaciones.py

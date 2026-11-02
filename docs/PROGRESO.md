@@ -8,20 +8,33 @@
 
 | Fase | Estado |
 |------|--------|
-| 0. Preparación del entorno y del agente | Completa (pendiente commit inicial) |
-| Episodio 1. Dominio + persistencia SQLite + pruebas de reglas | No iniciado |
+| 0. Preparación del entorno y del agente | Completa (commit `f0e4131`) |
+| Episodio 1. Dominio + persistencia SQLite + pruebas de reglas | Completo |
 | Episodio 2. CLI + prueba de persistencia en proceso nuevo | No iniciado |
 | Episodio 3. Auditoría de cobertura CA ↔ pruebas + sección Solución del README | No iniciado |
 
-**Próximo paso:** abrir una sesión nueva de Claude Code en la raíz del repo y pegar
-el prompt de `docs/prompts/episodio-1.md`.
+**Próximo paso:** episodio 2 (`docs/prompts/episodio-2.md`): CLI `python -m reservas` y CA-12 con `subprocess`.
 
 ## Decisiones abiertas
 
-- Ninguna. Los supuestos (zona horaria, formato, fechas pasadas, sin límites de
-  duración) están cerrados en `docs/ESPECIFICACION.md` §5.
+- Ninguna. Desde el 2026-11-02 el humano autorizó el modo automático con commits (D-09).
 
 ## Bitácora
+
+### 2026-11-02 — Episodio 1
+
+**Ejecutado y observado**
+
+- `.venv/Scripts/python -c "from zoneinfo import ZoneInfo; ZoneInfo('America/Argentina/Buenos_Aires')"`
+  → `ZoneInfoNotFoundError`. Se cambió a UTC−3 fijo (especificación v1.1, D-10).
+- `.venv/Scripts/python -m pytest -v` → **80 passed** ([evidencia](evidencia/episodio-1-pytest.txt)).
+- `.venv/Scripts/python scripts/verificar_mutaciones.py` → M1: 8 failed, M2: 3 failed;
+  código restaurado y verificado con `grep` ([evidencia](evidencia/episodio-1-mutaciones.txt)).
+
+**No ejecutado / pendiente**
+
+- CA-12 en un **proceso nuevo** (solo se probó reabrir la base en el mismo proceso) → episodio 2.
+- No hay CLI todavía → episodio 2.
 
 ### 2026-10-26 / 2026-10-28 — Fase 0: preparación
 

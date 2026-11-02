@@ -1,0 +1,10 @@
+[project]
+name = "reservas-laboratorio"
+version = "1.0.0"
+description = "Sistema local de reservas de equipos de laboratorio (Challenge IA)"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
