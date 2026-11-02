@@ -18,6 +18,10 @@
 | D-11 | Separar en capas `dominio` (reglas puras) → `servicio` (casos de uso) → `repositorio` (SQLite), y en el episodio 2 → CLI. | La regla de superposición se prueba sin base de datos, y la CLI no puede duplicar lógica. | Un único módulo. | Cuatro archivos chicos; las pruebas apuntan al servicio. |
 | D-12 | El filtrado de conflictos se hace en Python con `se_superponen` sobre las activas de la unidad, no en SQL. | Garantiza una sola fórmula de superposición (R13, `CLAUDE.md`). | `WHERE inicio < ? AND ? < fin` en SQL (sería una segunda copia de la regla). | Con pocas reservas por unidad el costo es despreciable; no escala a millones (fuera de alcance). |
 | D-13 | Verificar las pruebas con mutaciones (`scripts/verificar_mutaciones.py`). | Que las pruebas pasen no demuestra que detecten errores. | Confiar en que estén en verde. | Evidencia de que romper R8 o R10 hace fallar las pruebas. |
+| D-14 | Códigos de salida de la CLI: 0 = éxito, 1 = rechazo de negocio, 2 = uso incorrecto (argparse). Consultar una unidad ocupada devuelve 0. | Se puede usar desde scripts; una consulta respondida es una operación exitosa aunque la respuesta sea "ocupada". | Devolver 1 cuando está ocupada. | Documentado en el README y en el docstring de `__main__.py`. |
+| D-15 | Variable `RESERVAS_AHORA` para fijar el "ahora" desde la consola. | Las pruebas de extremo a extremo y el ejemplo del README tienen que dar lo mismo cualquier día (`CLAUDE.md`: el reloj es inyectable). | Usar fechas muy futuras con el reloj real. | Solo para pruebas y demos; sin la variable se usa la hora real UTC−3. |
+| D-16 | La CLI fuerza UTF-8 en stdout y stderr. | Defecto observado: `ya est� reservada` con la salida redirigida en Windows. | Pedir al usuario que configure `PYTHONUTF8=1`. | En una consola de Windows se ve igual; en archivos o pipes llega UTF-8. Si una terminal espera otra codificación, los acentos se verían mal. |
+| D-17 | `reiniciar-datos` sin `--confirmar` no borra y devuelve 1. El reinicio hace `DELETE` de filas, pero no reinicia el contador de IDs (`AUTOINCREMENT`). | Proteger contra el borrado accidental; un ID nunca se reutiliza, ni siquiera tras reiniciar (R15). | Borrar el archivo `.db`. | Tras reiniciar, la próxima reserva no vuelve a ser la `#1`. |
 
 ## Episodios de delegación
 
@@ -58,14 +62,30 @@ motivo → evidencia (archivo, commit, prueba).
 ### Episodio 2 — CLI y persistencia tras reinicio
 
 - **Objetivo y requisitos:** CLI de consultar / reservar / cancelar / listar / reiniciar; CA-12.
-- **Contexto suministrado:** igual que el episodio 1 + código del episodio 1.
-- **Extracto de instrucción:** ver `docs/prompts/episodio-2.md`.
-- **Acción / resultado del agente:** [COMPLETA EL AGENTE]
-- **Archivos tocados:** [COMPLETA EL AGENTE]
-- **Revisión humana realizada:** [COMPLETAR POR EL HUMANO]
-- **Decisión humana:** [COMPLETAR POR EL HUMANO]
-- **Motivo:** [COMPLETAR POR EL HUMANO]
-- **Evidencia:** `docs/evidencia/episodio-2-pytest.txt`, `docs/evidencia/persistencia-manual.md`, commit [COMPLETAR]
+- **Contexto suministrado:** igual que el episodio 1 + código del episodio 1 (commit `f34c873`).
+- **Extracto de instrucción:** `docs/prompts/episodio-2.md` («La CLI no debe tener lógica de negocio
+  propia… Pruebas de extremo a extremo con subprocess… procedimiento manual reproducible. Ejecutalo vos
+  y pegá la salida observada real»).
+- **Acción / resultado del agente:**
+  1. Implementó `reservas/__main__.py` (6 subcomandos) y `tests/test_cli.py`, con cada llamada como
+     proceso nuevo. Resultado: `93 passed`.
+  2. Ejecutó el procedimiento manual sobre `data/reservas.db`, con la base real.
+     **Encontró un defecto que las pruebas no veían:** `ya est� reservada`. Las pruebas no lo
+     detectaban porque fijaban `PYTHONIOENCODING=utf-8`.
+  3. **Corrección:** escribió primero una prueba que lo reproduce **sin** configurar la codificación →
+     `1 failed (UnicodeDecodeError ... 0xe1)`; luego agregó `_salida_utf8()` → `94 passed` (D-16).
+  4. Repitió el paso manual fallido y ejecutó la Sesión B (reinicio en una shell nueva): todo coincidió con lo esperado.
+- **Archivos tocados:** `reservas/__main__.py`, `tests/test_cli.py`, `docs/evidencia/persistencia-manual.md`.
+- **Revisión realizada (agente, modo automático):** la CLI solo llama a métodos de `ServicioReservas`
+  (no importa `se_superponen`); `reiniciar-datos` sin `--confirmar` no borra (prueba
+  `test_cli_reiniciar_datos_sin_confirmar_no_borra` y paso manual); las 93 pruebas previas no crearon
+  `data/reservas.db` (`ls data/` → solo `inventario.json`).
+- **Decisión:** **corregir y aceptar**. La regla de negocio era correcta, pero la salida en Windows no;
+  se aceptó después de la corrección y de la prueba de regresión.
+- **Ratificación humana:** [COMPLETAR POR EL HUMANO tras revisar el commit]
+- **Evidencia:** [`episodio-2-pytest.txt`](evidencia/episodio-2-pytest.txt),
+  [`persistencia-manual.md`](evidencia/persistencia-manual.md),
+  prueba `test_cli_salida_utf8_sin_configurar_el_entorno`, commit `episodio 2: …` (ver `git log`).
 
 ### Episodio 3 — Auditoría de cobertura y documentación de la solución
 

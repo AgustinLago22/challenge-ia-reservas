@@ -9,17 +9,35 @@
 | Fase | Estado |
 |------|--------|
 | 0. Preparación del entorno y del agente | Completa (commit `f0e4131`) |
-| Episodio 1. Dominio + persistencia SQLite + pruebas de reglas | Completo |
-| Episodio 2. CLI + prueba de persistencia en proceso nuevo | No iniciado |
+| Episodio 1. Dominio + persistencia SQLite + pruebas de reglas | Completo (commit `f34c873`) |
+| Episodio 2. CLI + prueba de persistencia en proceso nuevo | Completo |
 | Episodio 3. Auditoría de cobertura CA ↔ pruebas + sección Solución del README | No iniciado |
 
-**Próximo paso:** episodio 2 (`docs/prompts/episodio-2.md`): CLI `python -m reservas` y CA-12 con `subprocess`.
+**Próximo paso:** episodio 3 (`docs/prompts/episodio-3.md`): matriz de cobertura CA/R ↔ pruebas y sección Solución del README.
 
 ## Decisiones abiertas
 
 - Ninguna. Desde el 2026-11-02 el humano autorizó el modo automático con commits (D-09).
 
 ## Bitácora
+
+### 2026-11-02 — Episodio 2
+
+**Ejecutado y observado**
+
+- `.venv/Scripts/python -m pytest -q` → 93 passed (antes de ejecutar el procedimiento manual).
+- Procedimiento manual, Sesión A → **defecto**: `ya est� reservada` (cp1252 en un pipe de Windows).
+- Prueba de regresión nueva → `1 failed (UnicodeDecodeError ... 0xe1)`; tras la corrección → `94 passed`
+  ([evidencia](evidencia/episodio-2-pytest.txt)).
+- Sesión B en una shell nueva sobre la misma base → activas y canceladas recuperadas, la activa bloquea,
+  la cancelada no, el ID siguiente es `#4` ([evidencia](evidencia/persistencia-manual.md)).
+
+**Estado de datos local:** `data/reservas.db` quedó con las 4 reservas de demostración (no se versiona).
+
+**No ejecutado / pendiente**
+
+- No se probó la CLI desde PowerShell ni cmd; solo desde Git Bash y subprocess.
+- Matriz formal CA/R ↔ pruebas → episodio 3.
 
 ### 2026-11-02 — Episodio 1
 
