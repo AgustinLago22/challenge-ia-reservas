@@ -1,0 +1,15 @@
+# Entorno local
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Datos generados en ejecución (el inventario SÍ se versiona)
+data/*.db
+data/*.db-journal
+
+# Configuración local/personal de Claude Code (no se versiona)
+.claude/settings.local.json
+
+# Enunciado del profesor: se usó como contexto, no se redistribuye
+*.pdf

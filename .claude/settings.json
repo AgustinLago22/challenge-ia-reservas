@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit(reservas/**)",
+      "Edit(tests/**)",
+      "Edit(docs/PROGRESO.md)",
+      "Edit(docs/DECISIONES.md)",
+      "Edit(docs/evidencia/**)",
+      "Write(reservas/**)",
+      "Write(tests/**)",
+      "Write(docs/evidencia/**)",
+      "Bash(.venv/Scripts/python -m pytest:*)",
+      "Bash(.venv/Scripts/python -m reservas:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)"
+    ],
+    "ask": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(.venv/Scripts/python -m pip:*)",
+      "Edit(docs/ESPECIFICACION.md)",
+      "Edit(CLAUDE.md)",
+      "Edit(README.md)",
+      "Edit(data/inventario.json)",
+      "Edit(.claude/**)"
+    ],
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(rm -rf:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Read(data/*.db)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "WebFetch",
+      "WebSearch"
+    ]
+  }
+}
