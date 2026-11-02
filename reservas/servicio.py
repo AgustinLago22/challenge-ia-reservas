@@ -25,7 +25,7 @@ from .dominio import (
     validar_solicitante,
     validar_unidad,
 )
-from .repositorio import RepositorioSQLite
+from .repositorio import ORDENES, RepositorioSQLite
 
 Reloj = Callable[[], datetime]
 
@@ -78,12 +78,14 @@ class ServicioReservas:
                 raise ReservaYaCancelada(f"La reserva #{id_reserva} ya estaba cancelada (desde {reserva.cancelada_en}).")
             return self.repo.marcar_cancelada(id_reserva, self._ahora().strftime(FORMATO_MARCA))
 
-    def listar_reservas(self, unidad: str | None = None, estado: str | None = None) -> list[Reserva]:
+    def listar_reservas(self, unidad: str | None = None, estado: str | None = None, orden: str = "creacion") -> list[Reserva]:
         if unidad is not None:
             validar_unidad(unidad, self.inventario)
         if estado is not None and estado not in ESTADOS:
             raise ErrorValidacion(f"Estado inválido: {estado!r}. Use {' o '.join(ESTADOS)}.")
-        return self.repo.listar(unidad, estado)
+        if orden not in ORDENES:
+            raise ErrorValidacion(f"Orden inválido: {orden!r}. Use {', '.join(ORDENES)}.")
+        return self.repo.listar(unidad, estado, orden)
 
     def reiniciar_datos(self, confirmar: bool) -> int:
         """Borra TODAS las reservas (activas y canceladas). Exige confirmación explícita."""

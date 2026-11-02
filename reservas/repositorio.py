@@ -34,6 +34,14 @@ CREATE INDEX IF NOT EXISTS idx_reservas_unidad_estado ON reservas (unidad, estad
 
 _COLUMNAS = "id, unidad, solicitante, inicio, fin, estado, creada_en, cancelada_en"
 
+# Órdenes del historial. El ID desempata porque es único y crece con la creación (R15).
+ORDENES = {
+    "creacion": "id",  # por defecto: orden de creación
+    "creacion_desc": "id DESC",
+    "fecha": "inicio, id",  # por fecha de la reserva, más antigua primero
+    "fecha_desc": "inicio DESC, id DESC",  # por fecha de la reserva, más reciente primero
+}
+
 
 def _a_reserva(fila: sqlite3.Row) -> Reserva:
     return Reserva(
@@ -103,7 +111,8 @@ class RepositorioSQLite:
         ).fetchall()
         return [_a_reserva(f) for f in filas]
 
-    def listar(self, unidad: str | None = None, estado: str | None = None) -> list[Reserva]:
+    def listar(self, unidad: str | None = None, estado: str | None = None, orden: str = "creacion") -> list[Reserva]:
+        """orden: una clave de ORDENES (validada en el servicio). Nunca se arma SQL con texto del usuario."""
         condiciones, parametros = [], []
         if unidad is not None:
             condiciones.append("unidad = ?")
@@ -112,7 +121,9 @@ class RepositorioSQLite:
             condiciones.append("estado = ?")
             parametros.append(estado)
         where = f"WHERE {' AND '.join(condiciones)}" if condiciones else ""
-        filas = self._con.execute(f"SELECT {_COLUMNAS} FROM reservas {where} ORDER BY id", parametros).fetchall()
+        filas = self._con.execute(
+            f"SELECT {_COLUMNAS} FROM reservas {where} ORDER BY {ORDENES[orden]}", parametros
+        ).fetchall()
         return [_a_reserva(f) for f in filas]
 
     def borrar_todo(self) -> int:

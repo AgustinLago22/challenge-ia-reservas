@@ -235,3 +235,33 @@ def test_ca14_puerto_ocupado_da_error_claro(web):
     resultado = subprocess.run([sys.executable, "-m", "reservas", "web", "--puerto", str(puerto)], cwd=RAIZ,
                                capture_output=True, text=True, encoding="utf-8", timeout=30)
     assert resultado.returncode == 1 and "No se pudo iniciar el servidor" in resultado.stderr
+
+
+def test_ca14_historial_ordenado(web):
+    for unidad, dia in [("MIC-01", "2026-11-03"), ("OSC-01", "2026-11-02"), ("MUL-01", "2026-11-04"), ("FUE-01", "2026-11-02")]:
+        web.reservar(unidad, t("10:00", dia), t("11:00", dia))
+    ids = lambda orden: [r["id"] for r in web.pedir("GET", f"/api/reservas?orden={orden}")[1]]
+    assert ids("fecha_desc") == [3, 1, 4, 2]
+    assert ids("creacion_desc") == [4, 3, 2, 1]
+    assert [r["id"] for r in web.pedir("GET", "/api/reservas")[1]] == [1, 2, 3, 4]  # sin orden: creación
+    assert web.pedir("GET", "/api/reservas?orden=cualquiera")[0] == 400
+
+
+@pytest.mark.parametrize(
+    "ruta, encabezados, estado_esperado",
+    [
+        ("/api/reservas/1/cancelar", {"Content-Type": "application/json"}, 404),  # la ruta de cancelar no usa el cuerpo
+        ("/api/reservas/1/cancelar", {"Content-Type": "text/plain"}, 415),
+        ("/api/nada", None, 404),
+        ("/api/reservas", {"Host": "sitio-ajeno.example"}, 400),
+    ],
+)
+def test_ca14_rechazos_con_cuerpo_responden_sin_cortar_la_conexion(web, ruta, encabezados, estado_esperado):
+    """D-24: el servidor lee el cuerpo antes de responder, también en los rechazos tempranos."""
+    for _ in range(30):
+        assert web.pedir("POST", ruta, crudo=b'{"x": "' + b"y" * 3000 + b'"}', encabezados=encabezados)[0] == estado_esperado
+
+
+def test_ca14_cuerpo_demasiado_grande(web):
+    estado, error = web.pedir("POST", "/api/reservas", crudo=b"{" + b" " * 20_000 + b"}")
+    assert estado == 400 and "demasiado grande" in error["error"]

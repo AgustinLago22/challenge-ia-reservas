@@ -19,7 +19,8 @@ el historial**.
 - Consultar disponibilidad de una unidad (o de todas) en un intervalo.
 - Crear una reserva: una unidad, un solicitante ficticio, inicio y fin.
 - Cancelar una reserva conservando su identificador y sus datos.
-- Listar reservas (historial), incluidas las canceladas.
+- Listar reservas (historial), incluidas las canceladas, con filtros por unidad y estado y con **orden**
+  elegible: por creación o por fecha de la reserva, ascendente o descendente (desde v1.3).
 - Persistir reservas y estados entre reinicios de la aplicación.
 - Dos interfaces sobre las **mismas reglas**: consola (`python -m reservas …`) y una página web
   **local** (`python -m reservas web`, solo en `127.0.0.1`) con una API JSON. La web no tiene
@@ -106,3 +107,4 @@ se indique un procedimiento manual). Escenario base: ahora = `2026-11-01T08:00`.
 | v1 | 2026-10-26 | Versión inicial, redactada en la sesión de preparación del agente. | Punto de partida para los episodios de delegación. |
 | v1.1 | 2026-11-02 | Zona horaria: de `ZoneInfo("America/Argentina/Buenos_Aires")` a desfase fijo UTC−3. Se aclara que "ahora" se trunca al minuto. | Comprobado en el episodio 1: en Windows `ZoneInfo(...)` lanza `ZoneInfoNotFoundError` sin el paquete `tzdata`. El desfase fijo da el mismo resultado para Argentina sin agregar dependencias. El truncado evita rechazar una reserva del minuto en curso por los segundos. |
 | v1.2 | 2026-11-02 | Se agrega la interfaz web local (alcance §2 y CA-14). La web no ofrece el reinicio de datos. | Pedido del autor: «para comprobarlo más fácil». La consigna no la exige y no suma puntos por sí misma; se acepta porque facilita la verificación humana manual y no cambia ninguna regla. |
+| v1.3 | 2026-11-02 | Orden elegible del historial (`creacion`, `creacion_desc`, `fecha`, `fecha_desc`); por defecto, el de creación. | Pedido del autor tras probar la web: «un filtro para ver de más recientes a más viejas». No cambia ninguna regla de reserva. |

@@ -302,3 +302,40 @@ def test_ca13_error_dentro_de_la_transaccion_deshace_lo_escrito(repo):
             repo.insertar("MIC-01", "Ana Prueba", datetime(2026, 11, 2, 10), datetime(2026, 11, 2, 11), "x")
             raise RuntimeError("falla simulada")
     assert repo.listar() == []
+
+
+# --- Agregada tras el episodio 4: orden del historial (pedido del autor) ---
+
+ORDEN_ESPERADO = {
+    "creacion": [1, 2, 3, 4],
+    "creacion_desc": [4, 3, 2, 1],
+    "fecha": [2, 4, 1, 3],  # 02/11 (#2 y #4: desempata el ID), 03/11 (#1), 04/11 (#3)
+    "fecha_desc": [3, 1, 4, 2],
+}
+
+
+def _cuatro_reservas_desordenadas(servicio):
+    """Las fechas de las reservas NO siguen el orden de creación; #2 y #4 empiezan a la misma hora."""
+    servicio.crear_reserva("MIC-01", "Ana Prueba", t("10:00", "2026-11-03"), t("11:00", "2026-11-03"))
+    servicio.crear_reserva("OSC-01", "Beto Ficticio", t("10:00", "2026-11-02"), t("11:00", "2026-11-02"))
+    servicio.crear_reserva("MUL-01", "Carla Inventada", t("10:00", "2026-11-04"), t("11:00", "2026-11-04"))
+    servicio.crear_reserva("FUE-01", "Dario Ejemplo", t("10:00", "2026-11-02"), t("11:00", "2026-11-02"))
+
+
+@pytest.mark.parametrize("orden, ids", ORDEN_ESPERADO.items())
+def test_listar_ordenado(servicio, orden, ids):
+    _cuatro_reservas_desordenadas(servicio)
+    assert [r.id for r in servicio.listar_reservas(orden=orden)] == ids
+
+
+def test_listar_orden_por_defecto_es_creacion_y_se_combina_con_filtros(servicio):
+    _cuatro_reservas_desordenadas(servicio)
+    servicio.cancelar_reserva(1)
+    assert [r.id for r in servicio.listar_reservas()] == [1, 2, 3, 4]
+    assert [r.id for r in servicio.listar_reservas(estado=ACTIVA, orden="fecha_desc")] == [3, 4, 2]
+
+
+@pytest.mark.parametrize("orden", ["", "id; DROP TABLE reservas", "FECHA_DESC", None])
+def test_listar_orden_invalido(servicio, orden):
+    with pytest.raises(ErrorValidacion, match="Orden inválido"):
+        servicio.listar_reservas(orden=orden)

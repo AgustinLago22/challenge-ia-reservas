@@ -199,3 +199,12 @@ def test_cli_no_modifica_el_inventario(cli):
     cli("cancelar", "--id", "1")
     cli("reiniciar-datos", "--confirmar")
     assert inventario.read_bytes() == antes
+
+
+def test_cli_listar_ordenado(cli):
+    reservar(cli, "MIC-01", "2026-11-03T10:00", "2026-11-03T11:00")
+    reservar(cli, "OSC-01", "2026-11-02T10:00", "2026-11-02T11:00")
+    primeras = [linea.split()[0] for linea in cli("listar", "--orden", "fecha_desc").stdout.splitlines()]
+    assert primeras == ["#1", "#2"]
+    assert [linea.split()[0] for linea in cli("listar", "--orden", "fecha").stdout.splitlines()] == ["#2", "#1"]
+    assert cli("listar", "--orden", "otro").returncode == 2  # argparse rechaza el valor

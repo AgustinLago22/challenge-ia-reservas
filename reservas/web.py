@@ -7,7 +7,7 @@ Rutas:
   GET  /                              página (reservas/static/index.html)
   GET  /api/info                      "ahora" del servidor y ruta de la base
   GET  /api/unidades                  inventario
-  GET  /api/reservas?unidad=&estado=  historial
+  GET  /api/reservas?unidad=&estado=&orden=  historial (orden: creacion, creacion_desc, fecha, fecha_desc)
   GET  /api/disponibilidad?unidad=<ID|todas>&inicio=&fin=
   POST /api/reservas                  {"unidad", "solicitante", "inicio", "fin"} -> 201
   POST /api/reservas/<id>/cancelar    -> 200
@@ -131,15 +131,26 @@ def crear_servidor(
             puerto_real = self.server.server_address[1]
             return self.headers.get("Host") in {f"127.0.0.1:{puerto_real}", f"localhost:{puerto_real}"}
 
-        def _leer_json(self) -> dict:
+        def _leer_cuerpo(self) -> bytes:
+            """Lee SIEMPRE el cuerpo antes de responder. Si el servidor cierra la conexión con datos sin
+            leer, Windows puede cortarla (RST) antes de que el cliente lea la respuesta: se vio una vez como
+            ConnectionAbortedError en las pruebas (D-24)."""
             try:
                 largo = int(self.headers.get("Content-Length") or 0)
             except ValueError:
-                raise ErrorValidacion("Content-Length inválido.") from None
+                largo = -1
+            if largo < 0:
+                raise ErrorValidacion("Content-Length inválido.")
             if largo > MAX_CUERPO:
+                restante = min(largo, 1_000_000)  # descartar (con tope) para cerrar la conexión limpiamente
+                while restante > 0 and (bloque := self.rfile.read(min(restante, 65_536))):
+                    restante -= len(bloque)
                 raise ErrorValidacion("El pedido es demasiado grande.")
+            return self.rfile.read(largo)
+
+        def _leer_json(self) -> dict:
             try:
-                datos = json.loads(self.rfile.read(largo).decode("utf-8") or "null")
+                datos = json.loads(self._cuerpo.decode("utf-8") or "null")
             except (UnicodeDecodeError, json.JSONDecodeError):
                 raise ErrorValidacion("El cuerpo del pedido no es JSON válido.") from None
             if not isinstance(datos, dict):
@@ -175,7 +186,14 @@ def crear_servidor(
                 self._con_servicio(
                     lambda s: (
                         HTTPStatus.OK,
-                        [reserva_a_json(r) for r in s.listar_reservas(_parametro(q, "unidad") or None, _parametro(q, "estado") or None)],
+                        [
+                            reserva_a_json(r)
+                            for r in s.listar_reservas(
+                                _parametro(q, "unidad") or None,
+                                _parametro(q, "estado") or None,
+                                _parametro(q, "orden") or "creacion",
+                            )
+                        ],
                     )
                 )
             elif url.path == "/api/disponibilidad":
@@ -193,6 +211,10 @@ def crear_servidor(
                 self._error(HTTPStatus.NOT_FOUND, f"Ruta inexistente: {url.path}")
 
         def do_POST(self) -> None:
+            try:
+                self._cuerpo = self._leer_cuerpo()
+            except ErrorValidacion as exc:
+                return self._error(HTTPStatus.BAD_REQUEST, str(exc))
             if not self._host_valido():
                 return self._error(HTTPStatus.BAD_REQUEST, "Host no permitido: el servidor es solo local.")
             url = urlparse(self.path)

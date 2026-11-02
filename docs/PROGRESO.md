@@ -22,6 +22,22 @@
 
 ## Bitácora
 
+### 2026-11-02 — Cambio posterior al episodio 4: orden del historial (especificación v1.3)
+
+Pedido del autor, después de probar la web y confirmar que funciona: «un filtro para ver de más recientes a más viejas».
+
+**Ejecutado y observado**
+
+- Se agregó el orden en servicio, repositorio, consola (`listar --orden`), API (`?orden=`) y página (selector; por defecto «fecha de la reserva: más reciente primero»).
+- Primera corrida completa: `1 failed, 138 passed`. La que falló **no era del orden**: `test_ca14_cancelar` con `ConnectionAbortedError`. Se repitió 8 veces de forma aislada (pasó), con 600 pedidos de estrés (0 cortes) y en 6 corridas completas (pasó). No se reprodujo.
+- Corrección defensiva D-24 (leer siempre el cuerpo antes de responder) y pruebas nuevas → 5 de 5 corridas completas: `144 passed` ([evidencia](evidencia/orden-pytest.txt)).
+- `verificar_matriz.py` → todas las pruebas citadas y en verde ([evidencia](evidencia/orden-matriz.txt)).
+
+**No ejecutado / pendiente**
+
+- No se volvieron a correr las mutaciones (este cambio no toca las reglas de reserva). La última corrida vigente es [episodio-4-mutaciones.txt](evidencia/episodio-4-mutaciones.txt).
+- Causa del `ConnectionAbortedError` **no confirmada** (ver D-24).
+
 ### 2026-11-02 — Episodio 4
 
 **Ejecutado y observado**

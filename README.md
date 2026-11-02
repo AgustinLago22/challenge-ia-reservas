@@ -43,7 +43,7 @@ anticipación; un solo proceso a la vez.
 **Criterios de aceptación.** CA-01 a CA-14, cada uno con al menos una prueba automática:
 ver la [matriz de cobertura](docs/evidencia/matriz-cobertura.md).
 
-**Evolución.** v1 (commit `f0e4131`) → v1.1 (`f34c873`, cambio de zona horaria) → v1.2 (`136fdce`, web local).
+**Evolución.** v1 (commit `f0e4131`) → v1.1 (`f34c873`, cambio de zona horaria) → v1.2 (`136fdce`, web local) → v1.3 (orden del historial).
 Los motivos están en la tabla "Historial de cambios" de la especificación. Para recuperarla:
 `git log --follow -p -- docs/ESPECIFICACION.md`.
 
@@ -62,7 +62,7 @@ reservas/                 aplicación (solo biblioteca estándar)
   __main__.py             CLI (argparse); sin lógica de negocio
   web.py                  web local: API JSON con http.server; sin lógica de negocio
   static/index.html       página (HTML + JS sin frameworks)
-tests/                    128 pruebas pytest (unidad, servicio, persistencia, CLI y web por HTTP real)
+tests/                    144 pruebas pytest (unidad, servicio, persistencia, CLI y web por HTTP real)
 scripts/
   verificar_mutaciones.py introduce 7 fallas a propósito y comprueba que las pruebas las detectan
   verificar_matriz.py     comprueba que cada prueba citada en la matriz exista y pase, y que no haya sin citar
@@ -123,11 +123,11 @@ pruebas en verde (ver [PROGRESO](docs/PROGRESO.md)).
 ```
 
 La página permite consultar disponibilidad (de una unidad o de todas), reservar, ver el historial con
-filtros y cancelar con un botón. Usa **la misma base** que la consola: lo que se reserva en la web aparece en
+filtros y orden (por defecto, las de fecha más reciente primero) y cancelar con un botón. Usa **la misma base** que la consola: lo que se reserva en la web aparece en
 `listar`, y al revés. Arriba muestra la hora del servidor y la ruta de la base. Para detener el servidor:
 `Ctrl+C`. Los datos quedan guardados. El reinicio de datos **no** está en la web, solo en la consola.
 
-API (útil para probar con otras herramientas): `GET /api/unidades`, `GET /api/reservas?unidad=&estado=`,
+API (útil para probar con otras herramientas): `GET /api/unidades`, `GET /api/reservas?unidad=&estado=&orden=`,
 `GET /api/disponibilidad?unidad=<ID|todas>&inicio=&fin=`, `POST /api/reservas` (JSON con `unidad`,
 `solicitante`, `inicio`, `fin`), `POST /api/reservas/<id>/cancelar`. Respuestas: 201 creada,
 400 entrada inválida, 404 inexistente, 409 superposición o ya cancelada.
@@ -140,7 +140,7 @@ API (útil para probar con otras herramientas): `GET /api/unidades`, `GET /api/r
 .venv/Scripts/python -m reservas disponibilidad --unidad todas  --inicio 2026-11-02T10:00 --fin 2026-11-02T11:00
 .venv/Scripts/python -m reservas reservar --unidad MIC-01 --solicitante "Ana Prueba" --inicio 2026-11-02T10:00 --fin 2026-11-02T11:00
 .venv/Scripts/python -m reservas cancelar --id 1
-.venv/Scripts/python -m reservas listar [--unidad MIC-01] [--estado ACTIVA|CANCELADA]
+.venv/Scripts/python -m reservas listar [--unidad MIC-01] [--estado ACTIVA|CANCELADA] [--orden fecha_desc]
 .venv/Scripts/python -m reservas reiniciar-datos --confirmar
 .venv/Scripts/python -m reservas web [--puerto 8000]
 ```
@@ -187,7 +187,7 @@ $ python -m reservas listar
 ### Pruebas y verificaciones
 
 ```bash
-.venv/Scripts/python -m pytest -v                    # 128 pruebas
+.venv/Scripts/python -m pytest -v                    # 144 pruebas
 .venv/Scripts/python scripts/verificar_mutaciones.py # 7 mutaciones; cada una debe hacer fallar alguna prueba
 .venv/Scripts/python scripts/verificar_matriz.py     # cada prueba citada en la matriz existe y pasa
 .venv/Scripts/python scripts/recorrido_web.py        # recorrido de la web contra el proceso real
@@ -195,7 +195,7 @@ $ python -m reservas listar
 
 | Verificación requerida | Dónde | Resultado registrado |
 |------------------------|-------|----------------------|
-| Creación válida | `test_ca01_*` | ✅ [episodio-4-pytest.txt](docs/evidencia/episodio-4-pytest.txt) |
+| Creación válida | `test_ca01_*` | ✅ [orden-pytest.txt](docs/evidencia/orden-pytest.txt) |
 | Rechazo de superposición | `test_ca02_*` | ✅ |
 | Límites consecutivos | `test_ca03_*`, `test_se_superponen` | ✅ |
 | Unidades distintas simultáneas | `test_ca04_*` | ✅ |
@@ -221,6 +221,8 @@ Las pruebas usan siempre bases temporales (`tmp_path`) y nunca tocan `data/reser
 - **Sin prueba automática del reloj real** (`ahora_local`): todas las pruebas inyectan el reloj.
 - **El agente no probó la página web en un navegador real:** se probaron la API, el proceso real y la sintaxis del
   JavaScript (`node --check`). El aspecto y los clics los verifica el humano.
+- **Una falla intermitente sin causa confirmada:** una vez apareció `ConnectionAbortedError` en una prueba web. Se aplicó
+  una corrección defensiva y no volvió a aparecer en las corridas posteriores (D-24).
 - **El servidor web es solo para uso local** (`http.server`): no está pensado para exponerse en una red.
 
 ---
@@ -244,7 +246,7 @@ Resumen (detalle y evidencia en **[docs/AGENTE.md](docs/AGENTE.md)**):
 
 ## 4. Registro de decisiones y delegación
 
-**[docs/DECISIONES.md](docs/DECISIONES.md)** contiene 23 decisiones (D-01…D-23), con motivo, alternativas y
+**[docs/DECISIONES.md](docs/DECISIONES.md)** contiene 25 decisiones (D-01…D-25), con motivo, alternativas y
 consecuencias, y cuatro episodios de delegación (la consigna pide tres; el cuarto es la web):
 
 | Episodio | Objetivo | Qué pasó | Decisión | Commit |

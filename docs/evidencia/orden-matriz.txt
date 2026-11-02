@@ -1,0 +1,7 @@
+Referencias en la matriz: 73 | funciones de prueba existentes: 73
+Referencias inexistentes: ninguna
+Pruebas no citadas en la matriz: ninguna
+Ejecución de las pruebas citadas: 144 passed in 28.31s
+[código de salida: 0]
+
+# Ejecutado: 2026-11-02T15:51:13-03:00 | Python 3.13.5 | comando: .venv/Scripts/python scripts/verificar_matriz.py

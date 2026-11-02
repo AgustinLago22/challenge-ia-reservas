@@ -21,7 +21,7 @@ import sys
 
 from .dominio import ACTIVA, CANCELADA, Disponibilidad, Reserva, ReservaError, ahora_local, formatear_fecha, parsear_fecha
 from .inventario import RUTA_INVENTARIO, InventarioInvalido, cargar_inventario
-from .repositorio import RUTA_DB, RepositorioSQLite
+from .repositorio import ORDENES, RUTA_DB, RepositorioSQLite
 from .servicio import ServicioReservas
 
 TODAS = "todas"
@@ -68,6 +68,12 @@ def _crear_parser() -> argparse.ArgumentParser:
     li = sub.add_parser("listar", help="muestra el historial de reservas (activas y canceladas)")
     li.add_argument("--unidad")
     li.add_argument("--estado", choices=[ACTIVA, CANCELADA])
+    li.add_argument(
+        "--orden",
+        choices=list(ORDENES),
+        default="creacion",
+        help="creacion (por defecto), creacion_desc, fecha (de la reserva, más antigua primero) o fecha_desc (más reciente primero)",
+    )
 
     rd = sub.add_parser("reiniciar-datos", help="BORRA TODAS las reservas (requiere --confirmar)")
     rd.add_argument("--confirmar", action="store_true", help="confirma el borrado de todas las reservas")
@@ -103,7 +109,7 @@ def _ejecutar(args: argparse.Namespace, servicio: ServicioReservas) -> None:
         r = servicio.cancelar_reserva(args.id)
         print(f"Reserva cancelada: {_formato_reserva(r)}")
     elif args.comando == "listar":
-        reservas = servicio.listar_reservas(args.unidad, args.estado)
+        reservas = servicio.listar_reservas(args.unidad, args.estado, args.orden)
         for r in reservas:
             print(_formato_reserva(r))
         if not reservas:

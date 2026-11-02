@@ -100,6 +100,14 @@
         </select>
       </label>
       <label>Unidad <select id="filtro-unidad"><option value="">Todas</option></select></label>
+      <label>Orden
+        <select id="filtro-orden">
+          <option value="fecha_desc" selected>Fecha de la reserva: más reciente primero</option>
+          <option value="fecha">Fecha de la reserva: más antigua primero</option>
+          <option value="creacion_desc">Creación: más nueva primero</option>
+          <option value="creacion">Creación: más vieja primero</option>
+        </select>
+      </label>
       <button type="button" class="secundario" id="refrescar">Actualizar</button>
     </div>
     <div class="tabla">
@@ -163,7 +171,9 @@ function valores(form) {
 }
 
 async function refrescarTabla() {
-  const q = new URLSearchParams({ estado: $("filtro-estado").value, unidad: $("filtro-unidad").value });
+  const q = new URLSearchParams({
+    estado: $("filtro-estado").value, unidad: $("filtro-unidad").value, orden: $("filtro-orden").value,
+  });
   const r = await api("GET", "/api/reservas?" + q);
   const cuerpo = $("tabla-reservas");
   cuerpo.textContent = "";
@@ -216,6 +226,7 @@ $("form-reserva").addEventListener("submit", async (e) => {
 
 $("filtro-estado").addEventListener("change", refrescarTabla);
 $("filtro-unidad").addEventListener("change", refrescarTabla);
+$("filtro-orden").addEventListener("change", refrescarTabla);
 $("refrescar").addEventListener("click", refrescarTabla);
 
 (async () => {

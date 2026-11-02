@@ -69,6 +69,7 @@ En el episodio 4 se agregaron 26 casos de la web: **128 en total** ([episodio-4-
 | No muestra HTML del usuario (`textContent`, sin `innerHTML`) | `tests/test_web.py::test_ca14_la_pagina_no_inserta_html_del_usuario` | — |
 | No hay reinicio de datos por la web; rutas desconocidas → 404 | `tests/test_web.py::test_ca14_rutas_inexistentes_y_sin_reinicio_de_datos` | — |
 | Puerto ocupado → error claro (defecto de Windows corregido) | `tests/test_web.py::test_ca14_puerto_ocupado_da_error_claro` | — |
+| Lee el cuerpo antes de responder, también en los rechazos (D-24) | `tests/test_web.py::test_ca14_rechazos_con_cuerpo_responden_sin_cortar_la_conexion`, `tests/test_web.py::test_ca14_cuerpo_demasiado_grande` | — |
 | 409 ante un conflicto | `tests/test_web.py::test_ca14_ejemplo_del_enunciado_por_http`, `tests/test_web.py::test_ca14_cancelar` | M7 → 3 |
 
 ## 5. Alcance funcional (§2) sin un CA propio
@@ -77,6 +78,7 @@ En el episodio 4 se agregaron 26 casos de la web: **128 en total** ([episodio-4-
 |---------------|---------|
 | Leer el inventario precargado | `tests/test_inventario.py::test_inventario_precargado_tiene_las_cinco_unidades`, `tests/test_inventario.py::test_inventario_invalido`, `tests/test_inventario.py::test_inventario_inexistente`, `tests/test_cli.py::test_cli_unidades` |
 | Listar el historial con filtros | `tests/test_cli.py::test_cli_listar_filtros`, `tests/test_reservas.py::test_listar_valida_filtros` |
+| Orden del historial (v1.3) | `tests/test_reservas.py::test_listar_ordenado`, `tests/test_reservas.py::test_listar_orden_por_defecto_es_creacion_y_se_combina_con_filtros`, `tests/test_reservas.py::test_listar_orden_invalido`, `tests/test_cli.py::test_cli_listar_ordenado`, `tests/test_web.py::test_ca14_historial_ordenado` |
 | Reinicio de datos con confirmación | `tests/test_reservas.py::test_reiniciar_datos_exige_confirmacion`, `tests/test_cli.py::test_cli_reiniciar_datos_sin_confirmar_no_borra` |
 
 Supuestos de §5 con prueba: duración de varios días (`test_ca07_reserva_de_varios_dias_es_valida`),
