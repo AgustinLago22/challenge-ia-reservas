@@ -21,9 +21,14 @@ el historial**.
 - Cancelar una reserva conservando su identificador y sus datos.
 - Listar reservas (historial), incluidas las canceladas.
 - Persistir reservas y estados entre reinicios de la aplicación.
+- Dos interfaces sobre las **mismas reglas**: consola (`python -m reservas …`) y una página web
+  **local** (`python -m reservas web`, solo en `127.0.0.1`) con una API JSON. La web no tiene
+  lógica propia: todas las decisiones las toma el mismo servicio que usa la consola. Desde v1.2.
 
 **Fuera de alcance**: autenticación y roles, notificaciones, pagos, integraciones
-externas, despliegue, interfaz gráfica, concurrencia distribuida, escalabilidad.
+externas, despliegue, acceso desde otras máquinas, frente gráfico complejo, concurrencia
+distribuida y escalabilidad. El **reinicio de datos no se ofrece en la web** (solo en la consola,
+con `--confirmar`) para que no se pueda borrar todo con un clic.
 Tampoco se editan reservas: para cambiar un horario se cancela y se crea otra.
 
 ## 3. Inventario
@@ -92,6 +97,7 @@ se indique un procedimiento manual). Escenario base: ahora = `2026-11-01T08:00`.
 | CA-11 | Cancelar una reserva inexistente o ya cancelada se rechaza sin cambios. | R12, R14 |
 | CA-12 | Tras detener y reiniciar la aplicación (nuevo proceso sobre el mismo archivo de datos), se recuperan reservas activas y canceladas con sus estados, y las activas siguen bloqueando. | R11 + persistencia |
 | CA-13 | Una solicitud rechazada no crea registros ni altera los existentes. | R14 |
+| CA-14 | La web local aplica las mismas reglas que la consola: el ejemplo del enunciado da el mismo resultado por HTTP (201 creada / 409 superposición / 400 entrada inválida / 404 inexistente). Las reservas creadas por la web se ven desde la consola y viceversa, y persisten al reiniciar el servidor. | R1–R15 |
 
 ## Historial de cambios
 
@@ -99,3 +105,4 @@ se indique un procedimiento manual). Escenario base: ahora = `2026-11-01T08:00`.
 |---------|-------|--------|--------|
 | v1 | 2026-10-26 | Versión inicial, redactada en la sesión de preparación del agente. | Punto de partida para los episodios de delegación. |
 | v1.1 | 2026-11-02 | Zona horaria: de `ZoneInfo("America/Argentina/Buenos_Aires")` a desfase fijo UTC−3. Se aclara que "ahora" se trunca al minuto. | Comprobado en el episodio 1: en Windows `ZoneInfo(...)` lanza `ZoneInfoNotFoundError` sin el paquete `tzdata`. El desfase fijo da el mismo resultado para Argentina sin agregar dependencias. El truncado evita rechazar una reserva del minuto en curso por los segundos. |
+| v1.2 | 2026-11-02 | Se agrega la interfaz web local (alcance §2 y CA-14). La web no ofrece el reinicio de datos. | Pedido del autor: «para comprobarlo más fácil». La consigna no la exige y no suma puntos por sí misma; se acepta porque facilita la verificación humana manual y no cambia ninguna regla. |
