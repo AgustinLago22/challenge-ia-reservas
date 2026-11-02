@@ -16,6 +16,9 @@ archivo contradice la especificación, gana la especificación y hay que avisarl
   `json`, `datetime`). Única dependencia de desarrollo: `pytest` (fijada
   en `requirements-dev.txt`). No instalar paquetes nuevos sin aprobación.
 - Paquete `reservas/` en la raíz del repo, ejecutable con `python -m reservas`.
+- Interfaces: consola (`reservas/__main__.py`) y web local (`reservas/web.py` + `reservas/static/`,
+  `http.server`, solo `127.0.0.1`, desde la especificación v1.2). **Ninguna de las dos tiene lógica de
+  negocio**: las dos llaman a `ServicioReservas`. La web no ofrece el reinicio de datos.
 - Pruebas en `tests/`, ejecutadas con `.venv/Scripts/python -m pytest -v`.
 - En Windows usar la herramienta **Bash** (Git Bash) para comandos, con rutas `/`.
 

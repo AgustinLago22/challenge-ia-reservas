@@ -8,6 +8,8 @@ Variables de entorno:
   RESERVAS_DB          ruta de la base SQLite (por defecto data/reservas.db)
   RESERVAS_INVENTARIO  ruta del inventario JSON (por defecto data/inventario.json)
   RESERVAS_AHORA       fija el "ahora" (YYYY-MM-DDTHH:MM) para pruebas y demos reproducibles
+
+`python -m reservas web` abre la interfaz web local (reservas/web.py) sobre la misma base.
 """
 
 from __future__ import annotations
@@ -69,6 +71,9 @@ def _crear_parser() -> argparse.ArgumentParser:
 
     rd = sub.add_parser("reiniciar-datos", help="BORRA TODAS las reservas (requiere --confirmar)")
     rd.add_argument("--confirmar", action="store_true", help="confirma el borrado de todas las reservas")
+
+    w = sub.add_parser("web", help="abre la página web local en http://127.0.0.1:<puerto> (Ctrl+C para detener)")
+    w.add_argument("--puerto", type=int, default=8000, help="puerto local (por defecto 8000; 0 = uno libre)")
     return p
 
 
@@ -121,13 +126,34 @@ def _salida_utf8() -> None:
             flujo.reconfigure(encoding="utf-8")
 
 
+def _servir_web(puerto: int, ruta_db: str, inventario: dict[str, str], reloj) -> None:
+    from .web import crear_servidor
+
+    try:
+        servidor = crear_servidor(ruta_db, inventario, reloj, puerto)
+    except OSError as exc:  # p. ej. el puerto ya está en uso
+        raise ReservaError(f"No se pudo iniciar el servidor en el puerto {puerto}: {exc}") from None
+    print(f"Página web en http://127.0.0.1:{servidor.server_address[1]}  (base: {ruta_db}). Ctrl+C para detener.", flush=True)
+    try:
+        servidor.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        servidor.server_close()
+        print("Servidor detenido. Los datos quedan guardados.", flush=True)
+
+
 def main(argv: list[str] | None = None) -> int:
     _salida_utf8()
     args = _crear_parser().parse_args(argv)
     try:
         inventario = cargar_inventario(os.environ.get("RESERVAS_INVENTARIO") or RUTA_INVENTARIO)
         reloj = _reloj_desde_entorno()
-        with RepositorioSQLite(os.environ.get("RESERVAS_DB") or RUTA_DB) as repo:
+        ruta_db = os.environ.get("RESERVAS_DB") or str(RUTA_DB)
+        if args.comando == "web":
+            _servir_web(args.puerto, ruta_db, inventario, reloj)
+            return 0
+        with RepositorioSQLite(ruta_db) as repo:
             _ejecutar(args, ServicioReservas(inventario, repo, reloj))
     except (ReservaError, InventarioInvalido, sqlite3.Error) as exc:
         print(f"Error: {exc}", file=sys.stderr)

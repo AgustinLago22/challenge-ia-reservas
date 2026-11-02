@@ -22,6 +22,9 @@ MUTACIONES = [
     ("M6: cancelar hace DELETE en lugar de UPDATE (rompe R11)", "reservas/repositorio.py",
      '"UPDATE reservas SET estado = ?, cancelada_en = ? WHERE id = ? AND estado = ?",\n            (CANCELADA, cancelada_en, id_reserva, ACTIVA),',
      '"DELETE FROM reservas WHERE id = ? AND ? IS NOT NULL",\n            (id_reserva, cancelada_en),'),
+    # Agregada en el episodio 4:
+    ("M7: la web responde 400 en lugar de 409 ante un conflicto (rompe CA-14)", "reservas/web.py",
+     "return HTTPStatus.CONFLICT", "return HTTPStatus.BAD_REQUEST"),
 ]
 for nombre, archivo, original, mutado in MUTACIONES:
     p = Path(archivo); texto = p.read_text(encoding="utf-8")

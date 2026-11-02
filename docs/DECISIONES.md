@@ -22,6 +22,12 @@
 | D-15 | Variable `RESERVAS_AHORA` para fijar el "ahora" desde la consola. | Las pruebas de extremo a extremo y el ejemplo del README tienen que dar lo mismo cualquier día (`CLAUDE.md`: el reloj es inyectable). | Usar fechas muy futuras con el reloj real. | Solo para pruebas y demos; sin la variable se usa la hora real UTC−3. |
 | D-16 | La CLI fuerza UTF-8 en stdout y stderr. | Defecto observado: `ya est� reservada` con la salida redirigida en Windows. | Pedir al usuario que configure `PYTHONUTF8=1`. | En una consola de Windows se ve igual; en archivos o pipes llega UTF-8. Si una terminal espera otra codificación, los acentos se verían mal. |
 | D-17 | `reiniciar-datos` sin `--confirmar` no borra y devuelve 1. El reinicio hace `DELETE` de filas, pero no reinicia el contador de IDs (`AUTOINCREMENT`). | Proteger contra el borrado accidental; un ID nunca se reutiliza, ni siquiera tras reiniciar (R15). | Borrar el archivo `.db`. | Tras reiniciar, la próxima reserva no vuelve a ser la `#1`. |
+| D-18 | Agregar una web local, además de la consola (especificación v1.2). | Pedido del autor: «para comprobarlo más fácil». | Quedarse solo con la consola (la consigna no exige web y no suma puntos). | Más código para revisar; a cambio, la verificación humana se puede hacer con clics. |
+| D-19 | Web con `http.server` de la biblioteca estándar, API JSON y una página HTML/JS sin frameworks. | Sin dependencias nuevas; se reproduce igual que la consola. | Flask o FastAPI (dependencias) y Three.js (es para 3D, no aporta). | El servidor es simple y no apto para producción, que está fuera de alcance. |
+| D-20 | Cada pedido HTTP abre su propia conexión SQLite. | `ThreadingHTTPServer` atiende en hilos y una conexión `sqlite3` no se comparte entre hilos. | Una conexión global con un lock. | Abrir una conexión por pedido es barato en un uso local. |
+| D-21 | Controles de uso local: escuchar solo en `127.0.0.1`, rechazar un `Host` ajeno, exigir `Content-Type: application/json` en los POST, mostrar el texto con `textContent` y no exponer el reinicio de datos. | Que otra página abierta en el navegador no pueda crear, cancelar ni borrar reservas, y que un solicitante no pueda inyectar HTML. | No poner ningún control ("es local"). | Cada control tiene su prueba en `tests/test_web.py`. |
+| D-22 | En Windows, el servidor pide el puerto en uso exclusivo (`SO_EXCLUSIVEADDRUSE`, sin `SO_REUSEADDR`). | Defecto comprobado: con la opción por defecto de `http.server`, un segundo servidor se enlazaba a un puerto ya ocupado sin dar error. | Dejar la opción por defecto. | Con el puerto ocupado, `python -m reservas web` termina con código 1 y un mensaje claro. |
+| D-23 | `verificar_matriz.py` falla también si hay pruebas sin citar en la matriz. | Al agregar la web, el script listó 16 pruebas sin citar pero terminó con código 0: la matriz podía quedar desactualizada sin que nadie lo notara. | Que solo informe. | Agregar una prueba obliga a ubicarla en la matriz. |
 
 ## Episodios de delegación
 
@@ -120,6 +126,43 @@ motivo → evidencia (archivo, commit, prueba).
 - **Evidencia:** [`matriz-cobertura.md`](evidencia/matriz-cobertura.md), [`episodio-3-matriz.txt`](evidencia/episodio-3-matriz.txt),
   [`episodio-3-mutaciones.txt`](evidencia/episodio-3-mutaciones.txt), [`episodio-3-pytest.txt`](evidencia/episodio-3-pytest.txt),
   [`ejemplo-cli.txt`](evidencia/ejemplo-cli.txt); commits `0f3b0ae` (auditoría) y `episodio 3b: …` (documentación).
+
+### Episodio 4 — Interfaz web local
+
+- **Objetivo y requisitos:** especificación v1.2, CA-14: la misma funcionalidad desde el navegador, con las mismas reglas.
+- **Pedido humano real (2026-11-02):** «¿no se podría hacer por web?» → «Es para comprobarlo más fácil y que se testee mejor».
+- **Contexto suministrado:** todo el repositorio hasta el commit `7a2c23d`. Antes de codificar, el agente
+  advirtió que la consigna no exige web y que no suma puntos.
+- **Extracto de instrucción:** [`docs/prompts/episodio-4.md`](prompts/episodio-4.md) («la web NO tiene lógica de
+  negocio, solo llama a ServicioReservas… sin endpoint de reinicio de datos… textContent (nunca innerHTML)»).
+- **Acción / resultado del agente:**
+  1. Primero actualizó la especificación (v1.2, CA-14) y la commiteó aparte (`136fdce`), antes de escribir código.
+  2. Implementó `reservas/web.py`, `reservas/static/index.html` y el subcomando `web`. **Autocorrección antes de
+     probar:** había puesto un `except OSError` en `main()` que habría atrapado errores de cualquier comando; lo
+     limitó a la creación del servidor.
+  3. Escribió `tests/test_web.py` (26 casos). Primera ejecución: **25 passed, 1 failed**:
+     `test_ca14_puerto_ocupado_da_error_claro` quedó colgada hasta el timeout de 30 s.
+  4. **Diagnóstico antes de corregir:** un script mínimo mostró que, con la opción por defecto, un segundo servidor se
+     enlaza al puerto ocupado sin error, y que con `SO_EXCLUSIVEADDRUSE` falla con `WinError 10048`.
+     **Corrección:** `ServidorLocal` (D-22) → `128 passed`.
+  5. Verificó la sintaxis del JavaScript de la página con `node --check` y ejecutó un recorrido manual contra el
+     proceso real (`scripts/recorrido_web.py`): reservar, rechazar, cancelar, reiniciar el servidor y ver los datos.
+  6. Agregó la mutación M7 (la web responde 400 en lugar de 409 ante un conflicto) → detectada (3 fallas). Las 7 mutaciones se detectan.
+  7. `verificar_matriz.py` mostró 16 pruebas web sin citar pero terminó con código 0. **Corrección:** ahora falla en ese
+     caso (D-23); se agregó CA-14 a la matriz → 66 de 66 citadas.
+- **Archivos tocados:** `reservas/web.py`, `reservas/static/index.html`, `reservas/__main__.py`, `tests/test_web.py`,
+  `scripts/recorrido_web.py`, `scripts/verificar_mutaciones.py`, `scripts/verificar_matriz.py`,
+  `docs/evidencia/matriz-cobertura.md`, `CLAUDE.md`, `README.md`, `docs/PROGRESO.md`.
+- **Revisión realizada (agente, modo automático):** `web.py` no importa `se_superponen` ni valida fechas (todo
+  pasa por `ServicioReservas`); `grep innerHTML` en la página → 0 (también es una prueba); no existe ninguna ruta de reinicio.
+- **Limitación declarada:** el agente **no abrió la página en un navegador real** (no tiene uno disponible). Probó la API
+  y el proceso real, pero no el aspecto visual ni los clics: eso queda para la verificación humana (lista de
+  `docs/prompts/episodio-4.md`).
+- **Decisión:** **corregir y aceptar** (defecto de puerto en Windows y verificador de matriz permisivo, ambos corregidos).
+- **Ratificación humana:** [COMPLETAR POR EL HUMANO tras abrir la página y seguir la lista de `docs/prompts/episodio-4.md`]
+- **Evidencia:** [`episodio-4-pytest.txt`](evidencia/episodio-4-pytest.txt), [`episodio-4-recorrido-web.txt`](evidencia/episodio-4-recorrido-web.txt),
+  [`episodio-4-mutaciones.txt`](evidencia/episodio-4-mutaciones.txt), [`episodio-4-matriz.txt`](evidencia/episodio-4-matriz.txt);
+  commits `136fdce` (especificación) y `episodio 4: …` (implementación).
 
 ## Cómo ratifica el humano cada episodio
 

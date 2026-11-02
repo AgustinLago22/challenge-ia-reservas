@@ -11,15 +11,39 @@
 | 0. Preparación del entorno y del agente | Completa (commit `f0e4131`) |
 | Episodio 1. Dominio + persistencia SQLite + pruebas de reglas | Completo (commit `f34c873`) |
 | Episodio 2. CLI + prueba de persistencia en proceso nuevo | Completo (commit `27f4fb9`) |
-| Episodio 3. Auditoría de cobertura CA ↔ pruebas + sección Solución del README | Completo (commits `0f3b0ae` y 3b) |
+| Episodio 3. Auditoría de cobertura CA ↔ pruebas + sección Solución del README | Completo (commits `0f3b0ae` y `7a2c23d`) |
+| Episodio 4. Interfaz web local (especificación v1.2, CA-14) | Completo (commits `136fdce` e implementación) |
 
-**Próximo paso:** el humano ratifica los tres episodios (`docs/DECISIONES.md`), crea el repositorio remoto, hace `git push` y envía el enlace.
+**Próximo paso:** el humano abre la web y sigue la lista de `docs/prompts/episodio-4.md`, ratifica los cuatro episodios (`docs/DECISIONES.md`), crea el repositorio remoto, hace `git push` y envía el enlace.
 
 ## Decisiones abiertas
 
 - Ninguna. Desde el 2026-11-02 el humano autorizó el modo automático con commits (D-09).
 
 ## Bitácora
+
+### 2026-11-02 — Episodio 4
+
+**Ejecutado y observado**
+
+- Especificación v1.2 commiteada antes del código (`136fdce`).
+- `pytest -q tests/test_web.py` → **25 passed, 1 failed**: `test_ca14_puerto_ocupado_da_error_claro` llegó al timeout de 30 s.
+- Diagnóstico: con la opción por defecto un segundo servidor se enlaza a un puerto ocupado; con `SO_EXCLUSIVEADDRUSE`
+  aparece `WinError 10048`. Corregido (D-22) → `128 passed` ([evidencia](evidencia/episodio-4-pytest.txt)).
+- `node --check` sobre el JavaScript de la página → sintaxis válida (node v22.16.0).
+- `scripts/recorrido_web.py` contra el proceso real → 201 / 409 / 201 / 400 / 200, disponible tras cancelar; datos
+  presentes tras reiniciar el servidor ([evidencia](evidencia/episodio-4-recorrido-web.txt)).
+- `scripts/recorrido_web.py data/reservas.db` → se niega a ejecutarse (código 1), como se esperaba.
+- Mutaciones: 7 de 7 detectadas ([evidencia](evidencia/episodio-4-mutaciones.txt)).
+- `verificar_matriz.py`: 16 pruebas sin citar con código 0 → endurecido (D-23) → 66/66 citadas, 128 passed
+  ([evidencia](evidencia/episodio-4-matriz.txt)).
+
+**No ejecutado / pendiente**
+
+- **La página no se abrió en un navegador real** (el agente no dispone de uno). Lo verifica el humano con la lista de
+  `docs/prompts/episodio-4.md`.
+- En el ejecutable de Bash del agente falló una vez un heredoc muy largo (`unexpected EOF`); no se ejecutó nada y se
+  repitió el cambio desde un archivo de script.
 
 ### 2026-11-02 — Episodio 3
 

@@ -1,7 +1,7 @@
 """Comprueba que cada prueba citada en docs/evidencia/matriz-cobertura.md existe y pasa.
 
 Uso: .venv/Scripts/python scripts/verificar_matriz.py
-Sale con código 1 si alguna referencia no existe o alguna prueba falla.
+Sale con código 1 si alguna referencia no existe, alguna prueba no está citada o alguna falla.
 """
 import re
 import subprocess
@@ -31,4 +31,4 @@ ejecucion = subprocess.run(
     cwd=RAIZ, capture_output=True, text=True,
 )
 print("Ejecución de las pruebas citadas:", ejecucion.stdout.strip().splitlines()[-1])
-sys.exit(1 if faltantes or ejecucion.returncode else 0)
+sys.exit(1 if faltantes or sin_citar or ejecucion.returncode else 0)

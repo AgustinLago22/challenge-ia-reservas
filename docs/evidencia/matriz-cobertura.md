@@ -2,7 +2,7 @@
 
 Generada en el episodio 3. Cada referencia `archivo::prueba` es verificable con
 `.venv/Scripts/python scripts/verificar_matriz.py`, que extrae las referencias de este archivo,
-comprueba que existan y las ejecuta. La salida real está en [`episodio-3-matriz.txt`](episodio-3-matriz.txt).
+comprueba que existan y las ejecuta. La salida real está en [`episodio-3-matriz.txt`](episodio-3-matriz.txt) y, tras sumar la web, en [`episodio-4-matriz.txt`](episodio-4-matriz.txt).
 
 ## 1. Auditoría inicial: huecos encontrados antes de agregar pruebas
 
@@ -19,6 +19,7 @@ existentes después del episodio 2 (`pytest --collect-only`).
 | H6 | Las mutaciones solo cubrían R8 y R10. Al ampliarlas, **R4 quedó detectada por un único caso**. | Una sola prueba que protege una regla es frágil. | Mutaciones M3–M6 y un caso `inicio == fin` en `test_cli_disponibilidad_entradas_invalidas` (M4: de 1 a 2 fallas) |
 
 Resultado: de 94 a **102 casos de prueba**, todos en verde ([episodio-3-pytest.txt](episodio-3-pytest.txt)).
+En el episodio 4 se agregaron 26 casos de la web: **128 en total** ([episodio-4-pytest.txt](episodio-4-pytest.txt)). Los conteos de fallas por mutación de la sección 3 son los del episodio 3; los vigentes están en [episodio-4-mutaciones.txt](episodio-4-mutaciones.txt).
 
 ## 2. Criterios de aceptación
 
@@ -37,6 +38,7 @@ Resultado: de 94 a **102 casos de prueba**, todos en verde ([episodio-3-pytest.t
 | CA-11 | Cancelar inexistente, ya cancelada o con ID inválido | `tests/test_reservas.py::test_ca11_cancelar_inexistente_se_rechaza`, `tests/test_reservas.py::test_ca11_cancelar_dos_veces_se_rechaza_sin_cambios`, `tests/test_reservas.py::test_ca11_cancelar_con_id_invalido`, `tests/test_cli.py::test_cli_cancelar_errores` |
 | CA-12 | Persistencia tras detener y reiniciar | `tests/test_persistencia.py::test_ca12_reabrir_recupera_activas_y_canceladas`, `tests/test_persistencia.py::test_abrir_base_existente_no_pierde_datos`, `tests/test_cli.py::test_ca12_persistencia_tras_reiniciar_en_proceso_nuevo` + [procedimiento manual](persistencia-manual.md) |
 | CA-13 | Un rechazo no modifica datos | `tests/test_reservas.py::test_ca13_rechazos_no_modifican_datos`, `tests/test_reservas.py::test_ca13_conflicto_no_deja_la_transaccion_abierta`, `tests/test_reservas.py::test_ca13_error_dentro_de_la_transaccion_deshace_lo_escrito` |
+| CA-14 | Web local con las mismas reglas (episodio 4) | `tests/test_web.py::test_ca14_ejemplo_del_enunciado_por_http`, `tests/test_web.py::test_ca14_entradas_invalidas_devuelven_400`, `tests/test_web.py::test_ca14_cuerpos_invalidos`, `tests/test_web.py::test_ca14_disponibilidad`, `tests/test_web.py::test_ca14_cancelar`, `tests/test_web.py::test_ca14_listar_con_filtros`, `tests/test_web.py::test_ca14_persistencia_al_reiniciar_el_servidor`, `tests/test_web.py::test_ca14_web_y_consola_comparten_los_datos`, `tests/test_web.py::test_ca14_info_y_unidades`, `tests/test_web.py::test_ca14_pagina_principal`, `tests/test_web.py::test_ca14_proceso_real_python_m_reservas_web` |
 
 ## 3. Reglas de negocio
 
@@ -58,7 +60,18 @@ Resultado: de 94 a **102 casos de prueba**, todos en verde ([episodio-3-pytest.t
 | R14 rechazo sin cambios | `tests/test_reservas.py::test_ca13_rechazos_no_modifican_datos`, `tests/test_reservas.py::test_ca13_error_dentro_de_la_transaccion_deshace_lo_escrito` | — |
 | R15 IDs únicos, sin reutilizar | `tests/test_reservas.py::test_ca01_ids_unicos_y_crecientes`, `tests/test_persistencia.py::test_ca12_reabrir_recupera_activas_y_canceladas` | — |
 
-## 4. Alcance funcional (§2) sin un CA propio
+## 4. Controles de la web local (episodio 4)
+
+| Control | Pruebas | Mutación |
+|---------|---------|----------|
+| Solo escucha en `127.0.0.1` | `tests/test_web.py::test_ca14_solo_escucha_en_localhost` | — |
+| Rechaza un `Host` ajeno (DNS rebinding) | `tests/test_web.py::test_ca14_rechaza_host_ajeno` | — |
+| No muestra HTML del usuario (`textContent`, sin `innerHTML`) | `tests/test_web.py::test_ca14_la_pagina_no_inserta_html_del_usuario` | — |
+| No hay reinicio de datos por la web; rutas desconocidas → 404 | `tests/test_web.py::test_ca14_rutas_inexistentes_y_sin_reinicio_de_datos` | — |
+| Puerto ocupado → error claro (defecto de Windows corregido) | `tests/test_web.py::test_ca14_puerto_ocupado_da_error_claro` | — |
+| 409 ante un conflicto | `tests/test_web.py::test_ca14_ejemplo_del_enunciado_por_http`, `tests/test_web.py::test_ca14_cancelar` | M7 → 3 |
+
+## 5. Alcance funcional (§2) sin un CA propio
 
 | Funcionalidad | Pruebas |
 |---------------|---------|

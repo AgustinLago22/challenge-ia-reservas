@@ -1,7 +1,6 @@
 # Sistema de reservas de equipos de laboratorio
 
-Challenge IA — Tópicos Avanzados de Ingeniería de Software. Aplicación local de consola
-(Python + SQLite) para **consultar disponibilidad, reservar y cancelar** unidades de equipos de
+Challenge IA — Tópicos Avanzados de Ingeniería de Software. Aplicación local (Python + SQLite), con **consola y página web local**, para **consultar disponibilidad, reservar y cancelar** unidades de equipos de
 laboratorio sin superposiciones y sin perder el historial. La construyó un agente de programación
 (Claude Code) a partir de una especificación escrita antes del código.
 
@@ -23,7 +22,8 @@ para horarios superpuestos y las cancelaciones siguen bloqueando el horario.
 **Alcance.** Leer el inventario precargado (5 unidades: `MIC-01`, `MIC-02`, `OSC-01`, `MUL-01`,
 `FUE-01`); consultar disponibilidad por unidad e intervalo; crear reservas (una unidad, un solicitante
 ficticio, inicio y fin); cancelar conservando el registro; listar el historial; persistir entre
-reinicios. Fuera de alcance: autenticación, notificaciones, interfaz gráfica, edición de reservas
+reinicios. Dos interfaces con las mismas reglas: consola y web local (solo `127.0.0.1`, desde v1.2).
+Fuera de alcance: autenticación, notificaciones, acceso desde otras máquinas, edición de reservas
 y concurrencia distribuida.
 
 **Reglas principales** (lista completa R1–R15 en la especificación):
@@ -40,11 +40,11 @@ y concurrencia distribuida.
 pasado (sí se puede consultar o cancelar en el pasado); **sin** límite de duración ni de
 anticipación; un solo proceso a la vez.
 
-**Criterios de aceptación.** CA-01 a CA-13, cada uno con al menos una prueba automática:
+**Criterios de aceptación.** CA-01 a CA-14, cada uno con al menos una prueba automática:
 ver la [matriz de cobertura](docs/evidencia/matriz-cobertura.md).
 
-**Evolución.** v1 (commit `f0e4131`) → v1.1 (commit `f34c873`): cambio de zona horaria, con su motivo
-en la tabla "Historial de cambios" de la especificación. Para recuperarla:
+**Evolución.** v1 (commit `f0e4131`) → v1.1 (`f34c873`, cambio de zona horaria) → v1.2 (`136fdce`, web local).
+Los motivos están en la tabla "Historial de cambios" de la especificación. Para recuperarla:
 `git log --follow -p -- docs/ESPECIFICACION.md`.
 
 ---
@@ -60,24 +60,27 @@ reservas/                 aplicación (solo biblioteca estándar)
   repositorio.py          SQLite: esquema, transacciones, cancelar = UPDATE
   servicio.py             casos de uso; única búsqueda de conflictos (_buscar_conflictos)
   __main__.py             CLI (argparse); sin lógica de negocio
-tests/                    102 pruebas pytest (unidad, servicio, persistencia, CLI con subprocess)
+  web.py                  web local: API JSON con http.server; sin lógica de negocio
+  static/index.html       página (HTML + JS sin frameworks)
+tests/                    128 pruebas pytest (unidad, servicio, persistencia, CLI y web por HTTP real)
 scripts/
-  verificar_mutaciones.py introduce 6 fallas a propósito y comprueba que las pruebas las detectan
-  verificar_matriz.py     comprueba que cada prueba citada en la matriz exista y pase
+  verificar_mutaciones.py introduce 7 fallas a propósito y comprueba que las pruebas las detectan
+  verificar_matriz.py     comprueba que cada prueba citada en la matriz exista y pase, y que no haya sin citar
+  recorrido_web.py        recorrido manual de la web contra el proceso real
 data/inventario.json      inventario inicial (versionado)
 data/reservas.db          datos de reservas (se crea solo; NO versionado)
 docs/                     especificación, agente, decisiones, progreso, prompts y evidencia
 CLAUDE.md, .claude/       instrucciones, permisos y comando del agente
 ```
 
-Capas: `__main__` → `servicio` → (`dominio`, `repositorio`). Por qué así: [D-11](docs/DECISIONES.md).
+Capas: (`__main__` | `web`) → `servicio` → (`dominio`, `repositorio`). Por qué así: [D-11](docs/DECISIONES.md).
 
 ### Decisiones técnicas
 
 Python 3.13 con biblioteca estándar únicamente (D-01); CLI (D-02); SQLite con `BEGIN IMMEDIATE`
 para que verificar e insertar sea atómico (D-03); una sola función de superposición, aplicada en
 Python y no en SQL (D-04, D-12); UTC−3 fijo porque `zoneinfo` falla en Windows sin `tzdata` (D-10);
-salida UTF-8 forzada (D-16). Detalle de todas en [docs/DECISIONES.md](docs/DECISIONES.md).
+salida UTF-8 forzada (D-16); web con `http.server` y controles de uso local (D-19 a D-22). Detalle de todas en [docs/DECISIONES.md](docs/DECISIONES.md).
 
 ### Requisitos previos y versiones
 
@@ -99,8 +102,8 @@ py -m venv .venv                                    # Linux/macOS: python3 -m ve
 .venv/Scripts/python -m pip install -r requirements-dev.txt
 ```
 
-Verificado desde un clon limpio: dependencias idénticas a `requirements-dev.txt` y `102 passed`
-(ver [PROGRESO](docs/PROGRESO.md), episodio 3).
+Verificado desde un clon limpio en el episodio 3: dependencias idénticas a `requirements-dev.txt` y todas las
+pruebas en verde (ver [PROGRESO](docs/PROGRESO.md)).
 
 ### Carga inicial y reinicio de datos
 
@@ -112,6 +115,23 @@ Verificado desde un clon limpio: dependencias idénticas a `requirements-dev.txt
   > borra nada y termina con código 1. El inventario no se modifica. Los IDs no se reutilizan
   > después del reinicio: la próxima reserva no vuelve a ser la `#1`.
 
+### Página web local (la forma más fácil de probarlo)
+
+```bash
+.venv/Scripts/python -m reservas web          # luego abrir http://127.0.0.1:8000 en el navegador
+.venv/Scripts/python -m reservas web --puerto 8080
+```
+
+La página permite consultar disponibilidad (de una unidad o de todas), reservar, ver el historial con
+filtros y cancelar con un botón. Usa **la misma base** que la consola: lo que se reserva en la web aparece en
+`listar`, y al revés. Arriba muestra la hora del servidor y la ruta de la base. Para detener el servidor:
+`Ctrl+C`. Los datos quedan guardados. El reinicio de datos **no** está en la web, solo en la consola.
+
+API (útil para probar con otras herramientas): `GET /api/unidades`, `GET /api/reservas?unidad=&estado=`,
+`GET /api/disponibilidad?unidad=<ID|todas>&inicio=&fin=`, `POST /api/reservas` (JSON con `unidad`,
+`solicitante`, `inicio`, `fin`), `POST /api/reservas/<id>/cancelar`. Respuestas: 201 creada,
+400 entrada inválida, 404 inexistente, 409 superposición o ya cancelada.
+
 ### Comandos de la aplicación
 
 ```bash
@@ -122,6 +142,7 @@ Verificado desde un clon limpio: dependencias idénticas a `requirements-dev.txt
 .venv/Scripts/python -m reservas cancelar --id 1
 .venv/Scripts/python -m reservas listar [--unidad MIC-01] [--estado ACTIVA|CANCELADA]
 .venv/Scripts/python -m reservas reiniciar-datos --confirmar
+.venv/Scripts/python -m reservas web [--puerto 8000]
 ```
 
 | Código de salida | Significado |
@@ -166,21 +187,23 @@ $ python -m reservas listar
 ### Pruebas y verificaciones
 
 ```bash
-.venv/Scripts/python -m pytest -v                    # 102 pruebas
-.venv/Scripts/python scripts/verificar_mutaciones.py # 6 mutaciones; cada una debe hacer fallar alguna prueba
+.venv/Scripts/python -m pytest -v                    # 128 pruebas
+.venv/Scripts/python scripts/verificar_mutaciones.py # 7 mutaciones; cada una debe hacer fallar alguna prueba
 .venv/Scripts/python scripts/verificar_matriz.py     # cada prueba citada en la matriz existe y pasa
+.venv/Scripts/python scripts/recorrido_web.py        # recorrido de la web contra el proceso real
 ```
 
 | Verificación requerida | Dónde | Resultado registrado |
 |------------------------|-------|----------------------|
-| Creación válida | `test_ca01_*` | ✅ [episodio-3-pytest.txt](docs/evidencia/episodio-3-pytest.txt) |
+| Creación válida | `test_ca01_*` | ✅ [episodio-4-pytest.txt](docs/evidencia/episodio-4-pytest.txt) |
 | Rechazo de superposición | `test_ca02_*` | ✅ |
 | Límites consecutivos | `test_ca03_*`, `test_se_superponen` | ✅ |
 | Unidades distintas simultáneas | `test_ca04_*` | ✅ |
 | Entradas inválidas | `test_ca05_*` … `test_ca08_*`, `test_cli_entradas_invalidas` | ✅ |
 | Cancelar conserva y libera | `test_ca10_*` | ✅ |
 | Persistencia tras reiniciar (activas y canceladas) | `test_ca12_*` (proceso nuevo) + [procedimiento manual](docs/evidencia/persistencia-manual.md) | ✅ automático y manual, con salida observada |
-| Que las pruebas detecten errores | `verificar_mutaciones.py` | ✅ 6 de 6 detectadas ([evidencia](docs/evidencia/episodio-3-mutaciones.txt)) |
+| Mismas reglas desde la web (CA-14) | `tests/test_web.py` (HTTP real) + [recorrido](docs/evidencia/episodio-4-recorrido-web.txt) | ✅ |
+| Que las pruebas detecten errores | `verificar_mutaciones.py` | ✅ 7 de 7 detectadas ([evidencia](docs/evidencia/episodio-4-mutaciones.txt)) |
 
 Las pruebas usan siempre bases temporales (`tmp_path`) y nunca tocan `data/reservas.db`.
 
@@ -196,6 +219,9 @@ Las pruebas usan siempre bases temporales (`tmp_path`) y nunca tocan `data/reser
   **no** se verificó en una consola interactiva de cmd o PowerShell con otra página de códigos, donde los acentos
   podrían verse mal.
 - **Sin prueba automática del reloj real** (`ahora_local`): todas las pruebas inyectan el reloj.
+- **El agente no probó la página web en un navegador real:** se probaron la API, el proceso real y la sintaxis del
+  JavaScript (`node --check`). El aspecto y los clics los verifica el humano.
+- **El servidor web es solo para uso local** (`http.server`): no está pensado para exponerse en una red.
 
 ---
 
@@ -218,11 +244,12 @@ Resumen (detalle y evidencia en **[docs/AGENTE.md](docs/AGENTE.md)**):
 
 ## 4. Registro de decisiones y delegación
 
-**[docs/DECISIONES.md](docs/DECISIONES.md)** contiene 17 decisiones (D-01…D-17), con motivo, alternativas y
-consecuencias, y los tres episodios de delegación:
+**[docs/DECISIONES.md](docs/DECISIONES.md)** contiene 23 decisiones (D-01…D-23), con motivo, alternativas y
+consecuencias, y cuatro episodios de delegación (la consigna pide tres; el cuarto es la web):
 
 | Episodio | Objetivo | Qué pasó | Decisión | Commit |
 |----------|----------|----------|----------|--------|
 | 1 | Dominio, persistencia y pruebas de reglas | `zoneinfo` falló en Windows → se corrigió la especificación (v1.1) antes de codificar; 80 pruebas; 2 mutaciones detectadas | Aceptar con corrección | `f34c873` |
 | 2 | CLI y persistencia tras reinicio | El procedimiento manual mostró acentos rotos (`est�`) que las pruebas no veían → prueba de regresión en rojo → corrección → verde | Corregir y aceptar | `27f4fb9` |
-| 3 | Auditoría de cobertura y documentación | 6 huecos encontrados y cerrados; mutaciones ampliadas de 2 a 6 reglas; reproducción desde un clon limpio | Aceptar | `0f3b0ae` + commit de documentación |
+| 3 | Auditoría de cobertura y documentación | 6 huecos encontrados y cerrados; mutaciones ampliadas de 2 a 6 reglas; reproducción desde un clon limpio | Aceptar | `0f3b0ae`, `7a2c23d` |
+| 4 | Web local | Primero la especificación v1.2; el puerto ocupado no daba error en Windows → diagnóstico → corrección; el verificador de la matriz era permisivo → endurecido | Corregir y aceptar | `136fdce` + commit de implementación |
