@@ -22,6 +22,11 @@
 
 ## Bitácora
 
+### 2026-11-02 — Ratificación y publicación
+
+- El autor probó la web («Funciona bien») y delegó en el agente la redacción de las ratificaciones. Quedaron registradas en `docs/DECISIONES.md`, indicando qué verificó y qué no.
+- El `git push` lo ejecuta el autor (`gh repo create … --push`): al agente se le mantiene prohibido.
+
 ### 2026-11-02 — Cambio posterior al episodio 4: orden del historial (especificación v1.3)
 
 Pedido del autor, después de probar la web y confirmar que funciona: «un filtro para ver de más recientes a más viejas».

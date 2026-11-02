@@ -63,7 +63,7 @@ motivo → evidencia (archivo, commit, prueba).
   (fixture autouse `_aislar_base_real`).
 - **Decisión:** **aceptar con corrección**. Se corrigió la especificación (zona horaria) antes de
   implementar; el código se aceptó sin cambios porque pasó las pruebas y las mutaciones.
-- **Ratificación humana:** [COMPLETAR POR EL HUMANO tras revisar el commit]
+- **Ratificación humana:** **Acepto** (2026-11-02). Lo que hizo el autor: abrió la página web local y probó el sistema (reservar, superposición, turno consecutivo, otra unidad, cancelar y disponibilidad, según la guía de pasos que le dio el agente), y respondió «Funciona bien». No revisó el código ni los commits uno por uno; delegó en el agente la redacción de esta línea («no quiero completar nada… hacelo vos te doy autorización»). Qué cubre de este episodio: las reglas de superposición, turnos consecutivos, unidades distintas y cancelación, que se ejercitaron en la prueba por la web (la web llama a este mismo servicio).
 - **Evidencia:** [`episodio-1-pytest.txt`](evidencia/episodio-1-pytest.txt),
   [`episodio-1-mutaciones.txt`](evidencia/episodio-1-mutaciones.txt), commit `f34c873`.
 
@@ -90,7 +90,7 @@ motivo → evidencia (archivo, commit, prueba).
   `data/reservas.db` (`ls data/` → solo `inventario.json`).
 - **Decisión:** **corregir y aceptar**. La regla de negocio era correcta, pero la salida en Windows no;
   se aceptó después de la corrección y de la prueba de regresión.
-- **Ratificación humana:** [COMPLETAR POR EL HUMANO tras revisar el commit]
+- **Ratificación humana:** **Acepto** (2026-11-02). Lo que hizo el autor: abrió la página web local y probó el sistema (reservar, superposición, turno consecutivo, otra unidad, cancelar y disponibilidad, según la guía de pasos que le dio el agente), y respondió «Funciona bien». No revisó el código ni los commits uno por uno; delegó en el agente la redacción de esta línea («no quiero completar nada… hacelo vos te doy autorización»). Qué cubre de este episodio: la persistencia; las reservas creadas antes, incluidas las de la consola, aparecían en el historial de la página. La consola en sí no la probó el autor.
 - **Evidencia:** [`episodio-2-pytest.txt`](evidencia/episodio-2-pytest.txt),
   [`persistencia-manual.md`](evidencia/persistencia-manual.md),
   prueba `test_cli_salida_utf8_sin_configurar_el_entorno`, commit `27f4fb9`.
@@ -124,7 +124,7 @@ motivo → evidencia (archivo, commit, prueba).
   (`verificar_matriz.py`), no a mano. El ejemplo del README se copió de `ejemplo-cli.txt`, que es una salida real.
 - **Decisión:** **aceptar**. Las correcciones de este episodio (H6 y la codificación de los scripts) se hicieron antes
   de aceptar y quedaron registradas.
-- **Ratificación humana:** [COMPLETAR POR EL HUMANO tras revisar el commit]
+- **Ratificación humana:** **Acepto** (2026-11-02). Lo que hizo el autor: abrió la página web local y probó el sistema (reservar, superposición, turno consecutivo, otra unidad, cancelar y disponibilidad, según la guía de pasos que le dio el agente), y respondió «Funciona bien». No revisó el código ni los commits uno por uno; delegó en el agente la redacción de esta línea («no quiero completar nada… hacelo vos te doy autorización»). Qué cubre de este episodio: solo de forma indirecta. El autor no revisó la matriz de cobertura ni las pruebas; su aceptación se basa en que el sistema funcionó al usarlo.
 - **Evidencia:** [`matriz-cobertura.md`](evidencia/matriz-cobertura.md), [`episodio-3-matriz.txt`](evidencia/episodio-3-matriz.txt),
   [`episodio-3-mutaciones.txt`](evidencia/episodio-3-mutaciones.txt), [`episodio-3-pytest.txt`](evidencia/episodio-3-pytest.txt),
   [`ejemplo-cli.txt`](evidencia/ejemplo-cli.txt); commits `0f3b0ae` (auditoría) y `episodio 3b: …` (documentación).
@@ -161,12 +161,14 @@ motivo → evidencia (archivo, commit, prueba).
   y el proceso real, pero no el aspecto visual ni los clics: eso queda para la verificación humana (lista de
   `docs/prompts/episodio-4.md`).
 - **Decisión:** **corregir y aceptar** (defecto de puerto en Windows y verificador de matriz permisivo, ambos corregidos).
-- **Ratificación humana:** [COMPLETAR POR EL HUMANO tras abrir la página y seguir la lista de `docs/prompts/episodio-4.md`]
+- **Ratificación humana:** **Acepto** (2026-11-02). Lo que hizo el autor: abrió la página web local y probó el sistema (reservar, superposición, turno consecutivo, otra unidad, cancelar y disponibilidad, según la guía de pasos que le dio el agente), y respondió «Funciona bien». No revisó el código ni los commits uno por uno; delegó en el agente la redacción de esta línea («no quiero completar nada… hacelo vos te doy autorización»). Qué cubre de este episodio: es el más verificado por el autor, que usó la página directamente. Después pidió un cambio (el orden del historial, especificación v1.3), lo que muestra que la estaba usando de verdad. No verificó el reinicio del servidor.
 - **Evidencia:** [`episodio-4-pytest.txt`](evidencia/episodio-4-pytest.txt), [`episodio-4-recorrido-web.txt`](evidencia/episodio-4-recorrido-web.txt),
   [`episodio-4-mutaciones.txt`](evidencia/episodio-4-mutaciones.txt), [`episodio-4-matriz.txt`](evidencia/episodio-4-matriz.txt);
   commits `136fdce` (especificación) y `episodio 4: …` (implementación).
 
 ## Cómo ratifica el humano cada episodio
+
+> **Registro real (2026-11-02):** el autor ratificó los cuatro episodios de forma **global**, a partir de su prueba manual de la página web, y delegó en el agente la redacción de las líneas. Cada línea dice qué verificó el autor y qué no. El procedimiento de abajo es el que quedó previsto para una revisión más detallada.
 
 En `git log` hay un commit por episodio. Para cada uno, el autor revisa `git show <commit>`,
 vuelve a ejecutar `.venv/Scripts/python -m pytest -q` y el script de verificación correspondiente, y

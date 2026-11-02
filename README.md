@@ -97,7 +97,7 @@ ejecutarla ni para probarla.
 ### Instalación
 
 ```bash
-git clone <url-del-repo> && cd <carpeta>
+git clone https://github.com/AgustinLago22/challenge-ia-reservas.git && cd challenge-ia-reservas
 py -m venv .venv                                    # Linux/macOS: python3 -m venv .venv
 .venv/Scripts/python -m pip install -r requirements-dev.txt
 ```
