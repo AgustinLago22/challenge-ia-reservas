@@ -1,0 +1,53 @@
+== M1: '<' por '<=' en se_superponen (rompe R8)
+   resumen: 10 failed, 92 passed in 9.95s
+    FAILED tests/test_cli.py::test_cli_ejemplo_del_enunciado
+    FAILED tests/test_cli.py::test_cli_disponibilidad
+    FAILED tests/test_reservas.py::test_ca03_limites_consecutivos_permitidos[11:00-12:00]
+    FAILED tests/test_reservas.py::test_ca03_limites_consecutivos_permitidos[09:00-10:00]
+    FAILED tests/test_reservas.py::test_ca03_encadenar_tres_turnos_consecutivos
+    FAILED tests/test_reservas.py::test_ca09_disponibilidad_usa_las_mismas_reglas
+    FAILED tests/test_reservas.py::test_ca10_cancelar_solo_libera_esa_reserva
+    FAILED tests/test_reservas.py::test_ca13_conflicto_no_deja_la_transaccion_abierta
+    FAILED tests/test_superposicion.py::test_se_superponen[11:00-12:00-False-consecutivo posterior]
+    FAILED tests/test_superposicion.py::test_se_superponen[09:00-10:00-False-consecutivo anterior]
+== M2: las CANCELADAS tambien bloquean (rompe R10)
+   resumen: 4 failed, 98 passed in 9.98s
+    FAILED tests/test_cli.py::test_ca12_persistencia_tras_reiniciar_en_proceso_nuevo
+    FAILED tests/test_persistencia.py::test_ca12_reabrir_recupera_activas_y_canceladas
+    FAILED tests/test_reservas.py::test_ca01_ids_unicos_y_crecientes
+    FAILED tests/test_reservas.py::test_ca10_cancelar_conserva_datos_y_libera_horario
+== M3: crear_reserva no busca conflictos (rompe R7)
+   resumen: 12 failed, 90 passed in 9.79s
+    FAILED tests/test_cli.py::test_ca12_persistencia_tras_reiniciar_en_proceso_nuevo
+    FAILED tests/test_cli.py::test_cli_ejemplo_del_enunciado
+    FAILED tests/test_reservas.py::test_ca02_rechaza_superposicion_misma_unidad[10:30-11:30]
+    FAILED tests/test_reservas.py::test_ca02_rechaza_superposicion_misma_unidad[09:30-10:30]
+    FAILED tests/test_reservas.py::test_ca02_rechaza_superposicion_misma_unidad[10:15-10:45]
+    FAILED tests/test_reservas.py::test_ca02_rechaza_superposicion_misma_unidad[09:00-12:00]
+    FAILED tests/test_reservas.py::test_ca02_rechaza_superposicion_misma_unidad[10:00-11:00]
+    FAILED tests/test_reservas.py::test_ca09_consulta_y_creacion_coinciden[10:30-11:30]
+    FAILED tests/test_reservas.py::test_ca09_consulta_y_creacion_coinciden[09:30-10:30]
+    FAILED tests/test_reservas.py::test_ca09_consulta_y_creacion_coinciden[10:00-11:00]
+    FAILED tests/test_reservas.py::test_ca13_rechazos_no_modifican_datos
+    FAILED tests/test_reservas.py::test_ca13_conflicto_no_deja_la_transaccion_abierta
+== M4: acepta inicio igual al fin (rompe R4)
+   resumen: 2 failed, 100 passed in 9.99s
+    FAILED tests/test_cli.py::test_cli_disponibilidad_entradas_invalidas[MIC-01-2026-11-02T10:00-2026-11-02T10:00-estrictamente anterior]
+    FAILED tests/test_reservas.py::test_ca07_rechaza_inicio_no_anterior_al_fin[11:00-11:00]
+== M5: acepta solicitante de solo espacios (rompe R2)
+   resumen: 4 failed, 98 passed in 10.14s
+    FAILED tests/test_reservas.py::test_ca06_rechaza_solicitante_vacio_o_solo_espacios[ ]
+    FAILED tests/test_reservas.py::test_ca06_rechaza_solicitante_vacio_o_solo_espacios[     ]
+    FAILED tests/test_reservas.py::test_ca06_rechaza_solicitante_vacio_o_solo_espacios[\t]
+    FAILED tests/test_reservas.py::test_ca06_rechaza_solicitante_vacio_o_solo_espacios[ \t \n ]
+== M6: cancelar hace DELETE en lugar de UPDATE (rompe R11)
+   resumen: 7 failed, 95 passed in 9.20s
+    FAILED tests/test_cli.py::test_ca12_persistencia_tras_reiniciar_en_proceso_nuevo
+    FAILED tests/test_cli.py::test_cli_cancelar_errores
+    FAILED tests/test_cli.py::test_cli_listar_filtros
+    FAILED tests/test_persistencia.py::test_ca12_reabrir_recupera_activas_y_canceladas
+    FAILED tests/test_reservas.py::test_ca10_cancelar_conserva_datos_y_libera_horario
+    FAILED tests/test_reservas.py::test_ca11_cancelar_dos_veces_se_rechaza_sin_cambios
+    FAILED tests/test_reservas.py::test_supuesto_se_puede_cancelar_una_reserva_cuyo_horario_ya_paso
+
+# Ejecutado: 2026-11-02T13:23:32-03:00 | Python 3.13.5 | comando: .venv/Scripts/python scripts/verificar_mutaciones.py | código restaurado: git diff --stat -- reservas vacío

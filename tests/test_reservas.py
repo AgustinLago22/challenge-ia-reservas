@@ -11,7 +11,7 @@ from reservas.dominio import (
     ReservaYaCancelada,
 )
 
-from .conftest import t
+from .conftest import AHORA, t
 
 
 def test_ca01_crear_reserva_valida(servicio):
@@ -268,3 +268,37 @@ def test_reiniciar_datos_exige_confirmacion(servicio, mic01_10a11):
     assert servicio.listar_reservas() == [mic01_10a11]
     assert servicio.reiniciar_datos(confirmar=True) == 1
     assert servicio.listar_reservas() == []
+
+
+# --- Agregadas en el episodio 3 para cerrar huecos de la matriz de cobertura ---
+
+
+def test_supuesto_se_puede_cancelar_una_reserva_cuyo_horario_ya_paso(inventario, repo):
+    """Especificación §5, Fechas pasadas: cancelar una reserva activa ya vencida está permitido."""
+    from datetime import datetime
+
+    from reservas.servicio import ServicioReservas
+
+    pasada = ServicioReservas(inventario, repo, reloj=lambda: AHORA).crear_reserva(
+        "MIC-01", "Ana Prueba", t("10:00"), t("11:00")
+    )
+    despues = ServicioReservas(inventario, repo, reloj=lambda: datetime(2026, 11, 5, 9, 0))
+    cancelada = despues.cancelar_reserva(pasada.id)
+    assert cancelada.estado == CANCELADA and cancelada.cancelada_en == "2026-11-05T09:00:00"
+
+
+def test_supuesto_sin_limite_de_anticipacion(servicio):
+    """Especificación §5: no hay máximo de anticipación."""
+    r = servicio.crear_reserva("OSC-01", "Ana Prueba", "2030-06-15T10:00", "2030-06-15T11:00")
+    assert r.estado == ACTIVA
+
+
+def test_ca13_error_dentro_de_la_transaccion_deshace_lo_escrito(repo):
+    """R14: si algo falla después de insertar y antes del COMMIT, no queda nada guardado."""
+    from datetime import datetime
+
+    with pytest.raises(RuntimeError):
+        with repo.transaccion():
+            repo.insertar("MIC-01", "Ana Prueba", datetime(2026, 11, 2, 10), datetime(2026, 11, 2, 11), "x")
+            raise RuntimeError("falla simulada")
+    assert repo.listar() == []

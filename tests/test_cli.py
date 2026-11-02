@@ -171,3 +171,31 @@ def test_cli_salida_utf8_sin_configurar_el_entorno(tmp_path):
     assert "Unidades válidas" in resultado.stderr.decode("utf-8")
     unidades = subprocess.run([sys.executable, "-m", "reservas", "unidades"], cwd=RAIZ, env=entorno, capture_output=True)
     assert "Multímetro" in unidades.stdout.decode("utf-8")
+
+
+# --- Agregadas en el episodio 3 para cerrar huecos de la matriz de cobertura ---
+
+
+@pytest.mark.parametrize(
+    "unidad, inicio, fin, mensaje",
+    [
+        ("XYZ-99", "2026-11-02T10:00", "2026-11-02T11:00", "Unidad desconocida"),
+        ("MIC-01", "2026-11-02T11:00", "2026-11-02T10:00", "estrictamente anterior"),
+        ("MIC-01", "2026-11-02T10:00", "2026-11-02T10:00", "estrictamente anterior"),
+        ("MIC-01", "2026-11-02 10:00", "2026-11-02T11:00", "Fecha de inicio inválida"),
+    ],
+)
+def test_cli_disponibilidad_entradas_invalidas(cli, unidad, inicio, fin, mensaje):
+    """R13 desde la consola: la consulta valida igual que la creación y devuelve 1."""
+    resultado = cli("disponibilidad", "--unidad", unidad, "--inicio", inicio, "--fin", fin)
+    assert resultado.returncode == 1 and mensaje in resultado.stderr
+
+
+def test_cli_no_modifica_el_inventario(cli):
+    """Alcance: el inventario es de solo lectura, incluso al reiniciar datos."""
+    inventario = RAIZ / "data" / "inventario.json"
+    antes = inventario.read_bytes()
+    reservar(cli, "MIC-01", "2026-11-02T10:00", "2026-11-02T11:00")
+    cli("cancelar", "--id", "1")
+    cli("reiniciar-datos", "--confirmar")
+    assert inventario.read_bytes() == antes
