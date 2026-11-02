@@ -58,15 +58,31 @@ final de cada archivo de `docs/prompts/`.
 > posterior de cada commit, que queda separado por episodio. Para que el harness pida las
 > aprobaciones hay que ejecutar `claude` en modo normal.
 
+### Controles efectivamente aplicados (evidencia)
+
+| Control | Qué pasó | Evidencia |
+|---------|----------|-----------|
+| Regla `deny: Bash(rm -rf:*)` | En el episodio 3, el harness **denegó** un comando que empezaba con `rm -rf` (preparar un clon limpio). El agente lo repitió con una carpeta nueva, sin borrar. Esto demuestra que las reglas `deny` se aplican incluso en modo *bypass*. | `docs/DECISIONES.md`, episodio 3, paso 5 |
+| `git push` prohibido | No se hizo ningún push; el repositorio no tiene remoto configurado. | `git remote -v` vacío |
+| Autorización para commits | El humano autorizó los commits automáticos (D-09). Se hizo un commit por episodio para que la revisión posterior sea por partes. | `git log` |
+| Pruebas aisladas de la base real | Tras 93 pruebas, `data/reservas.db` no existía. | `docs/PROGRESO.md`, episodio 2 |
+| Honestidad del registro | Los campos de decisión humana quedaron separados ("Ratificación humana") en lugar de inventarlos. | `docs/DECISIONES.md` |
+
 ## Adaptaciones específicas comprobables
 
 1. **Regla de turnos consecutivos** (`CLAUDE.md` §"Regla de intervalos"): una sola
-   función `se_superponen` con `<` estricto. Evidencia de uso: `reservas/` y las pruebas
-   `test_ca03_*` (episodio 1).
+   función `se_superponen` con `<` estricto (`reservas/dominio.py`), y crear y consultar comparten
+   `_buscar_conflictos` (`reservas/servicio.py`). **Evidencia de uso:** las pruebas `test_ca03_*`; la
+   mutación M1 (`<` → `<=`) hace fallar 10 pruebas ([evidencia](evidencia/episodio-3-mutaciones.txt)).
 2. **Procedimiento de persistencia** (`CLAUDE.md` §"Procedimiento de persistencia"):
-   cancelar con `UPDATE`, transacción `BEGIN IMMEDIATE`, pruebas sobre `tmp_path` y en un proceso nuevo.
-   Evidencia: pruebas de reapertura (episodio 1) y de subprocess (episodio 2).
-3. **Comando `/cerrar-episodio`**: genera `docs/evidencia/episodio-N-pytest.txt` con salida real.
+   cancelar con `UPDATE`, transacción `BEGIN IMMEDIATE`, pruebas sobre `tmp_path`, y verificación en un proceso
+   nuevo. **Evidencia de uso:** `repositorio.py` (único `DELETE` en `borrar_todo`); la mutación M6
+   (cancelar con `DELETE`) hace fallar 7 pruebas; `test_ca12_persistencia_tras_reiniciar_en_proceso_nuevo`;
+   el [procedimiento manual](evidencia/persistencia-manual.md).
+3. **Fechas** (`CLAUDE.md` §"Fechas y reloj"): la instrucción decía `zoneinfo`. Se comprobó que fallaba en Windows y
+   **se adaptó la instrucción** (especificación v1.1, D-10). El cambio es visible en `git log -p -- CLAUDE.md`.
+4. **Comando `/cerrar-episodio`**: genera `docs/evidencia/episodio-N-pytest.txt` con salida real, sin editar
+   (archivos de los episodios 1, 2 y 3).
 
 ## Retención del progreso
 

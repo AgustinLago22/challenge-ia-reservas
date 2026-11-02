@@ -57,7 +57,7 @@ motivo → evidencia (archivo, commit, prueba).
   implementar; el código se aceptó sin cambios porque pasó las pruebas y las mutaciones.
 - **Ratificación humana:** [COMPLETAR POR EL HUMANO tras revisar el commit]
 - **Evidencia:** [`episodio-1-pytest.txt`](evidencia/episodio-1-pytest.txt),
-  [`episodio-1-mutaciones.txt`](evidencia/episodio-1-mutaciones.txt), commit `episodio 1: …` (ver `git log`).
+  [`episodio-1-mutaciones.txt`](evidencia/episodio-1-mutaciones.txt), commit `f34c873`.
 
 ### Episodio 2 — CLI y persistencia tras reinicio
 
@@ -85,16 +85,44 @@ motivo → evidencia (archivo, commit, prueba).
 - **Ratificación humana:** [COMPLETAR POR EL HUMANO tras revisar el commit]
 - **Evidencia:** [`episodio-2-pytest.txt`](evidencia/episodio-2-pytest.txt),
   [`persistencia-manual.md`](evidencia/persistencia-manual.md),
-  prueba `test_cli_salida_utf8_sin_configurar_el_entorno`, commit `episodio 2: …` (ver `git log`).
+  prueba `test_cli_salida_utf8_sin_configurar_el_entorno`, commit `27f4fb9`.
 
 ### Episodio 3 — Auditoría de cobertura y documentación de la solución
 
-- **Objetivo y requisitos:** cada CA-xx cubierto por al menos una prueba; README §Solución.
-- **Contexto suministrado:** todo el repo.
-- **Extracto de instrucción:** ver `docs/prompts/episodio-3.md`.
-- **Acción / resultado del agente:** [COMPLETA EL AGENTE]
-- **Archivos tocados:** [COMPLETA EL AGENTE]
-- **Revisión humana realizada:** [COMPLETAR POR EL HUMANO]
-- **Decisión humana:** [COMPLETAR POR EL HUMANO]
-- **Motivo:** [COMPLETAR POR EL HUMANO]
-- **Evidencia:** `docs/evidencia/episodio-3-pytest.txt`, `docs/evidencia/matriz-cobertura.md`, commit [COMPLETAR]
+- **Objetivo y requisitos:** cada CA-xx y cada regla Rx cubiertos por al menos una prueba; README §Solución.
+- **Contexto suministrado:** todo el repo hasta el commit `27f4fb9`.
+- **Extracto de instrucción:** `docs/prompts/episodio-3.md` («Marcá explícitamente cualquier CA o regla SIN
+  prueba… primero mostrame la matriz con los huecos… un ejemplo real de entrada/salida (ejecutado, no inventado)»).
+  En modo automático (D-09), «mostrame primero» se cumplió registrando los huecos en la matriz
+  antes de escribir las pruebas que los cierran.
+- **Acción / resultado del agente:**
+  1. Comparó la especificación con las 45 funciones de prueba (`pytest --collect-only`) y encontró
+     **5 huecos de cobertura** (H1–H5): cancelar reservas pasadas, sin límite de anticipación, rollback de la
+     transacción, validación de `disponibilidad` en la CLI e inventario de solo lectura.
+  2. Agregó 8 casos de prueba → `102 passed`. Amplió las mutaciones a M3–M6: todas detectadas, pero **M4 (R4) solo por un
+     caso** (H6). **Corrección:** se agregó un caso de `inicio == fin` en otro camino del código → M4 pasó a 2 fallas.
+  3. Escribió `scripts/verificar_matriz.py`. Su primera ejecución mostró **6 pruebas no citadas** en la matriz;
+     se agregó la sección 4 (alcance) → 50 de 50 citadas, 102 passed.
+  4. **Defecto repetido en su propio script:** `Ejecuci�n`, por el mismo cp1252 de D-16. Se corrigió en
+     ambos scripts de `scripts/`.
+  5. Intentó preparar el clon limpio con `rm -rf`: **el harness lo denegó** (regla `deny` de
+     `.claude/settings.json`). Repitió el paso con una carpeta nueva, sin borrar nada.
+  6. Reprodujo desde un clon limpio: venv nueva, `pip install -r requirements-dev.txt`, `pip freeze` idéntico,
+     `102 passed`. Ejecutó la CLI desde PowerShell 5.1 (pendiente del episodio 2). Generó el ejemplo real del README.
+- **Archivos tocados:** `tests/test_reservas.py`, `tests/test_cli.py`, `scripts/verificar_mutaciones.py`,
+  `scripts/verificar_matriz.py`, `docs/evidencia/matriz-cobertura.md`, `docs/evidencia/ejemplo-cli.txt`, `README.md`,
+  `docs/AGENTE.md`, `docs/PROGRESO.md`.
+- **Revisión realizada (agente, modo automático):** cada referencia de la matriz se verificó **ejecutándola**
+  (`verificar_matriz.py`), no a mano. El ejemplo del README se copió de `ejemplo-cli.txt`, que es una salida real.
+- **Decisión:** **aceptar**. Las correcciones de este episodio (H6 y la codificación de los scripts) se hicieron antes
+  de aceptar y quedaron registradas.
+- **Ratificación humana:** [COMPLETAR POR EL HUMANO tras revisar el commit]
+- **Evidencia:** [`matriz-cobertura.md`](evidencia/matriz-cobertura.md), [`episodio-3-matriz.txt`](evidencia/episodio-3-matriz.txt),
+  [`episodio-3-mutaciones.txt`](evidencia/episodio-3-mutaciones.txt), [`episodio-3-pytest.txt`](evidencia/episodio-3-pytest.txt),
+  [`ejemplo-cli.txt`](evidencia/ejemplo-cli.txt); commits `0f3b0ae` (auditoría) y `episodio 3b: …` (documentación).
+
+## Cómo ratifica el humano cada episodio
+
+En `git log` hay un commit por episodio. Para cada uno, el autor revisa `git show <commit>`,
+vuelve a ejecutar `.venv/Scripts/python -m pytest -q` y el script de verificación correspondiente, y
+completa la línea **Ratificación humana** con: acepto / corrijo / rechazo, el motivo y la fecha.

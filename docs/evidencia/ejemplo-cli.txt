@@ -1,0 +1,60 @@
+# Ejemplo de uso de la CLI — salida real
+
+Base temporal nueva (RESERVAS_DB en el scratchpad), RESERVAS_AHORA=2026-11-01T08:00, Git Bash, Python 3.13.5, commit 0f3b0ae, 2026-11-02T13:27:07-03:00.
+
+```text
+$ python -m reservas unidades
+MIC-01  Microscopio digital
+MIC-02  Microscopio digital
+OSC-01  Osciloscopio
+MUL-01  Multímetro
+FUE-01  Fuente de alimentación
+# código de salida: 0
+
+$ python -m reservas reservar --unidad MIC-01 --solicitante Ana Prueba --inicio 2026-11-02T10:00 --fin 2026-11-02T11:00
+Reserva creada: #1    MIC-01  ACTIVA     2026-11-02T10:00 -> 2026-11-02T11:00  Ana Prueba
+# código de salida: 0
+
+$ python -m reservas reservar --unidad MIC-01 --solicitante Beto Ficticio --inicio 2026-11-02T10:30 --fin 2026-11-02T11:30
+Error: La unidad MIC-01 ya está reservada en ese intervalo: #1 (2026-11-02T10:00->2026-11-02T11:00)
+# código de salida: 1
+
+$ python -m reservas reservar --unidad MIC-01 --solicitante Beto Ficticio --inicio 2026-11-02T11:00 --fin 2026-11-02T12:00
+Reserva creada: #2    MIC-01  ACTIVA     2026-11-02T11:00 -> 2026-11-02T12:00  Beto Ficticio
+# código de salida: 0
+
+$ python -m reservas reservar --unidad MIC-02 --solicitante Carla Inventada --inicio 2026-11-02T10:00 --fin 2026-11-02T11:00
+Reserva creada: #3    MIC-02  ACTIVA     2026-11-02T10:00 -> 2026-11-02T11:00  Carla Inventada
+# código de salida: 0
+
+$ python -m reservas disponibilidad --unidad todas --inicio 2026-11-02T10:00 --fin 2026-11-02T11:00
+MIC-01  OCUPADA     2026-11-02T10:00 -> 2026-11-02T11:00  conflicto con: #1 2026-11-02T10:00->2026-11-02T11:00 (Ana Prueba)
+MIC-02  OCUPADA     2026-11-02T10:00 -> 2026-11-02T11:00  conflicto con: #3 2026-11-02T10:00->2026-11-02T11:00 (Carla Inventada)
+OSC-01  DISPONIBLE  2026-11-02T10:00 -> 2026-11-02T11:00
+MUL-01  DISPONIBLE  2026-11-02T10:00 -> 2026-11-02T11:00
+FUE-01  DISPONIBLE  2026-11-02T10:00 -> 2026-11-02T11:00
+# código de salida: 0
+
+$ python -m reservas cancelar --id 1
+Reserva cancelada: #1    MIC-01  CANCELADA  2026-11-02T10:00 -> 2026-11-02T11:00  Ana Prueba  (cancelada 2026-11-01T08:00:00)
+# código de salida: 0
+
+$ python -m reservas disponibilidad --unidad MIC-01 --inicio 2026-11-02T10:00 --fin 2026-11-02T11:00
+MIC-01  DISPONIBLE  2026-11-02T10:00 -> 2026-11-02T11:00
+# código de salida: 0
+
+$ python -m reservas listar
+#1    MIC-01  CANCELADA  2026-11-02T10:00 -> 2026-11-02T11:00  Ana Prueba  (cancelada 2026-11-01T08:00:00)
+#2    MIC-01  ACTIVA     2026-11-02T11:00 -> 2026-11-02T12:00  Beto Ficticio
+#3    MIC-02  ACTIVA     2026-11-02T10:00 -> 2026-11-02T11:00  Carla Inventada
+# código de salida: 0
+
+$ python -m reservas reservar --unidad MIC-01 --solicitante     --inicio 2026-11-02T13:00 --fin 2026-11-02T14:00
+Error: El solicitante no puede estar vacío ni contener solo espacios.
+# código de salida: 1
+
+$ python -m reservas reiniciar-datos
+Error: reiniciar-datos BORRA TODAS las reservas (activas y canceladas). No se borró nada; repita con --confirmar para hacerlo.
+# código de salida: 1
+
+```

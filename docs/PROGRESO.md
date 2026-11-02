@@ -10,16 +10,39 @@
 |------|--------|
 | 0. Preparación del entorno y del agente | Completa (commit `f0e4131`) |
 | Episodio 1. Dominio + persistencia SQLite + pruebas de reglas | Completo (commit `f34c873`) |
-| Episodio 2. CLI + prueba de persistencia en proceso nuevo | Completo |
-| Episodio 3. Auditoría de cobertura CA ↔ pruebas + sección Solución del README | No iniciado |
+| Episodio 2. CLI + prueba de persistencia en proceso nuevo | Completo (commit `27f4fb9`) |
+| Episodio 3. Auditoría de cobertura CA ↔ pruebas + sección Solución del README | Completo (commits `0f3b0ae` y 3b) |
 
-**Próximo paso:** episodio 3 (`docs/prompts/episodio-3.md`): matriz de cobertura CA/R ↔ pruebas y sección Solución del README.
+**Próximo paso:** el humano ratifica los tres episodios (`docs/DECISIONES.md`), crea el repositorio remoto, hace `git push` y envía el enlace.
 
 ## Decisiones abiertas
 
 - Ninguna. Desde el 2026-11-02 el humano autorizó el modo automático con commits (D-09).
 
 ## Bitácora
+
+### 2026-11-02 — Episodio 3
+
+**Ejecutado y observado**
+
+- `pytest --collect-only` → 45 funciones de prueba; la auditoría encontró los huecos H1–H5
+  ([matriz](evidencia/matriz-cobertura.md)).
+- Pruebas nuevas → `102 passed` ([evidencia](evidencia/episodio-3-pytest.txt)).
+- `scripts/verificar_mutaciones.py` → 6 de 6 mutaciones detectadas (M4 reforzada de 1 a 2 fallas)
+  ([evidencia](evidencia/episodio-3-mutaciones.txt)).
+- `scripts/verificar_matriz.py` → primera ejecución: 6 pruebas sin citar → corregido → 50/50 citadas, 102 passed
+  ([evidencia](evidencia/episodio-3-matriz.txt)).
+- Comando con `rm -rf` → **denegado por el harness** (regla `deny`).
+- Clon limpio en el scratchpad: `git clone` + venv nueva + `pip install -r requirements-dev.txt` → `pip freeze`
+  idéntico a `requirements-dev.txt`, `102 passed`.
+- PowerShell 5.1.26100: `reservar` → código 0; unidad inválida → código 1; los acentos se ven bien con la salida capturada.
+- Ejemplo del README → [ejemplo-cli.txt](evidencia/ejemplo-cli.txt).
+
+**No ejecutado / pendiente**
+
+- No se probó una consola interactiva de cmd o PowerShell con otra página de códigos.
+- No se probaron procesos concurrentes (fuera de alcance).
+- **Pendiente del humano:** ratificar los episodios, crear el remoto, hacer `git push` (prohibido al agente) y enviar el enlace.
 
 ### 2026-11-02 — Episodio 2
 
@@ -36,7 +59,7 @@
 
 **No ejecutado / pendiente**
 
-- No se probó la CLI desde PowerShell ni cmd; solo desde Git Bash y subprocess.
+- No se probó la CLI desde PowerShell ni cmd; solo desde Git Bash y subprocess. (PowerShell: resuelto en el episodio 3.)
 - Matriz formal CA/R ↔ pruebas → episodio 3.
 
 ### 2026-11-02 — Episodio 1
